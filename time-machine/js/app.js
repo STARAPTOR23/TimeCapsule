@@ -1,11 +1,13 @@
 window.TimeMachine = window.TimeMachine || {};
 
 (function () {
-
   const modeButtons = document.querySelectorAll('.mode-btn');
   const idleState = document.getElementById('idle-state');
   const timelineView = document.getElementById('timeline-view');
-
+  const directSearch = document.getElementById('direct-search');
+  const yearInput = document.getElementById('year-input');
+  const directExplore = document.getElementById('direct-explore');
+  const inputError = document.getElementById('input-error');
   const resultsView = document.getElementById('results-view');
   const resultsBackdrop = document.getElementById('results-backdrop');
   const resultsEyebrow = document.getElementById('results-eyebrow');
@@ -15,10 +17,13 @@ window.TimeMachine = window.TimeMachine || {};
   const cultureList = document.getElementById('culture-list');
   const factsList = document.getElementById('facts-list');
   const backBtn = document.getElementById('back-btn');
+  const tvTransition = document.getElementById('tv-transition');
+  const tvYear = document.getElementById('tv-year');
 
-  // Short flavor text for the hero. Purely descriptive copy, separate from
-  // the historical/cultural data in history.json.
   const ERA_INFO = {
+    'theme-1940s': { label: '1940s — Film Noir', description: 'A wartime decade of radio, black-and-white cinema, swing, and dramatic change.' },
+    'theme-1950s': { label: '1950s — Atomic Age', description: 'Post-war optimism, television, diners, rock and roll, and the dawn of the space age.' },
+    'theme-1960s': { label: '1960s — Space Age / Psychedelic', description: 'A decade of cultural revolution, moonshots, counterculture, and bold new design.' },
     'theme-1970s': { label: '1970s — Vintage', description: 'Warm tones, bell-bottoms, and vinyl records — a decade that ran on analog.' },
     'theme-1980s': { label: '1980s — Retro Neon', description: 'Neon lights, synth-pop, and the first home computers lighting up living rooms.' },
     'theme-1990s': { label: '1990s — VHS / Pixel / Grunge', description: "Dial-up modems, grunge, and the early internet's chunky, colorful energy." },
@@ -27,7 +32,6 @@ window.TimeMachine = window.TimeMachine || {};
     'theme-2020s': { label: '2020s — Modern / Futuristic', description: 'Dark mode, AI tools, and interfaces built to feel instant.' }
   };
 
-  // Loaded once and cached — no need to re-fetch on every selection.
   let historyData = null;
   let historyLoadPromise = null;
 
@@ -38,10 +42,7 @@ window.TimeMachine = window.TimeMachine || {};
         if (!res.ok) throw new Error('Failed to load history.json');
         return res.json();
       })
-      .then(function (data) {
-        historyData = data;
-        return data;
-      })
+      .then(function (data) { historyData = data; return data; })
       .catch(function (err) {
         console.error('Could not load historical data:', err);
         historyData = { decades: {}, years: {} };
@@ -50,21 +51,13 @@ window.TimeMachine = window.TimeMachine || {};
     return historyLoadPromise;
   }
 
-  // Decade key like "1990s" from either a year (1995) or a decade start (1990).
-  function decadeKeyFor(value) {
-    return Math.floor(value / 10) * 10 + 's';
-  }
+  function decadeKeyFor(value) { return Math.floor(value / 10) * 10 + 's'; }
 
-  // Year-specific data wins when present; otherwise falls back to the
-  // whole decade's content so every year always has something to show.
   function getContentFor(mode, value) {
     const decadeKey = decadeKeyFor(value);
     const decadeContent = (historyData.decades && historyData.decades[decadeKey]) || { events: [], culture: [], funFacts: [] };
-
     if (mode === 'decade') return decadeContent;
-
-    const yearContent = historyData.years && historyData.years[String(value)];
-    return yearContent || decadeContent;
+    return (historyData.years && historyData.years[String(value)]) || decadeContent;
   }
 
   function fillList(listEl, items) {
@@ -76,59 +69,98 @@ window.TimeMachine = window.TimeMachine || {};
     });
   }
 
+  function isValidYear(value) {
+    const year = Number(value);
+    return Number.isInteger(year) && year >= TimeMachine.validMinYear && year <= TimeMachine.validMaxYear;
+  }
+
+  function clearViews() {
+    idleState.hidden = true;
+    timelineView.hidden = true;
+    directSearch.hidden = true;
+    resultsView.hidden = true;
+  }
+
+  function selectMode(mode, activeBtn) {
+    modeButtons.forEach(function (btn) { btn.classList.toggle('active', btn === activeBtn); });
+    clearViews();
+    if (mode === 'direct') {
+      directSearch.hidden = false;
+      yearInput.focus();
+      return;
+    }
+    timelineView.hidden = false;
+    TimeMachine.timeline.start(mode);
+  }
+
+  function showTvTransition(mode, value, label) {
+    const themeClass = TimeMachine.getThemeClassForYear(value);
+    TimeMachine.applyBodyTheme(themeClass);
+    tvYear.textContent = mode === 'year' || mode === 'direct' ? value : label;
+    tvTransition.className = 'tv-transition';
+    tvTransition.hidden = false;
+    void tvTransition.offsetWidth;
+    tvTransition.classList.add('play');
+
+    setTimeout(function () {
+      showResults(mode, value, label);
+      setTimeout(function () { tvTransition.classList.add('close'); }, 80);
+      setTimeout(function () {
+        tvTransition.hidden = true;
+        tvTransition.className = 'tv-transition';
+      }, 650);
+    }, 1450);
+  }
+
   function showResults(mode, value, label) {
     loadHistoryData().then(function () {
       const themeClass = TimeMachine.getThemeClassForYear(value);
       const era = ERA_INFO[themeClass];
       const content = getContentFor(mode, value);
 
-      resultsBackdrop.className = 'results-backdrop era-' + themeClass.replace('theme-', '');
+      resultsBackdrop.className = 'results-backdrop bg-layer era-' + themeClass.replace('theme-', '');
       resultsEyebrow.textContent = era.label;
-      resultsTitle.textContent = mode === 'year' ? 'WELCOME TO ' + value : 'EXPLORING THE ' + label.toUpperCase();
+      resultsTitle.textContent = mode === 'year' || mode === 'direct' ? 'WELCOME TO ' + value : 'EXPLORING THE ' + label.toUpperCase();
       resultsDescription.textContent = era.description;
-
       fillList(eventsList, content.events);
       fillList(cultureList, content.culture);
       fillList(factsList, content.funFacts);
 
-      // Movie grid stays a placeholder — TMDB integration is the next stage.
-
       timelineView.hidden = true;
+      directSearch.hidden = true;
       resultsView.hidden = false;
       resultsView.scrollTop = 0;
     });
   }
 
-  function selectMode(mode, activeBtn) {
-    modeButtons.forEach(function (btn) {
-      btn.classList.toggle('active', btn === activeBtn);
-    });
-
-    idleState.hidden = true;
-    resultsView.hidden = true;
-    timelineView.hidden = false;
-
-    TimeMachine.timeline.start(mode);
+  function exploreDirectYear() {
+    const value = Number(yearInput.value);
+    inputError.textContent = '';
+    if (!isValidYear(value)) {
+      inputError.textContent = 'Please enter a whole year from 1940 to 2026.';
+      yearInput.focus();
+      return;
+    }
+    modeButtons.forEach(function (btn) { btn.classList.toggle('active', btn.dataset.mode === 'direct'); });
+    showTvTransition('direct', value, String(value));
   }
 
   modeButtons.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      selectMode(btn.dataset.mode, btn);
-    });
+    btn.addEventListener('click', function () { selectMode(btn.dataset.mode, btn); });
   });
 
-  // Fired by timeline.js when the user confirms a year/decade selection.
+  directExplore.addEventListener('click', exploreDirectYear);
+  yearInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') exploreDirectYear(); });
+
   document.addEventListener('timeline:enter', function (e) {
-    showResults(e.detail.mode, e.detail.value, e.detail.label);
+    showTvTransition(e.detail.mode, e.detail.value, e.detail.label);
   });
 
   backBtn.addEventListener('click', function () {
     resultsView.hidden = true;
-    timelineView.hidden = false;
+    idleState.hidden = false;
+    modeButtons.forEach(function (btn) { btn.classList.remove('active'); });
   });
 
-  // Warm the cache as soon as the page loads, so the first selection
-  // doesn't have to wait on the fetch.
   loadHistoryData();
-
 })();

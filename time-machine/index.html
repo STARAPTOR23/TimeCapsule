@@ -6,7 +6,7 @@
   <title>The Time Machine – Historical Capsule</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/themes.css" />
@@ -14,31 +14,23 @@
 </head>
 <body>
 
-  <!-- ===== HEADER ===== -->
-  <!-- Minimal by design: just a mark and the two entry points into the timeline. -->
   <header class="site-header">
     <div class="brand">TIME MACHINE</div>
-    <nav class="mode-nav">
+    <nav class="mode-nav" aria-label="Time search modes">
       <button class="mode-btn" data-mode="year" type="button">Search by Year</button>
       <span class="nav-divider">|</span>
       <button class="mode-btn" data-mode="decade" type="button">Search by Decade</button>
+      <span class="nav-divider">|</span>
+      <button class="mode-btn" data-mode="direct" type="button">Enter Year</button>
     </nav>
   </header>
 
   <main class="stage" id="stage">
-
-    <!-- ===== IDLE STATE ===== -->
-    <!-- Shown before either mode is picked. No cards, no dashboard — just an invitation. -->
     <div class="idle-state" id="idle-state">
       <p class="idle-text">Choose how you'd like to explore time</p>
     </div>
 
-    <!-- ===== TIMELINE VIEW ===== -->
-    <!-- js/timeline.js fills #timeline-track with <li> items and drives all of the
-         scroll / drag / keyboard interaction below. Hidden until a mode is chosen. -->
     <section class="timeline-view" id="timeline-view" hidden>
-
-      <!-- Two stacked layers so the era backdrop can cross-fade instead of jump-cutting. -->
       <div class="timeline-bg" aria-hidden="true">
         <div class="bg-layer" id="bg-layer-a"></div>
         <div class="bg-layer" id="bg-layer-b"></div>
@@ -57,19 +49,24 @@
       <div class="enter-panel">
         <button class="enter-btn" id="enter-btn" type="button"></button>
       </div>
-
     </section>
 
-    <!-- ===== RESULTS VIEW ===== -->
-    <!-- Shown after ENTER. js/app.js loads data/history.json once, then fills
-         in the hero text and the three local-data sections below. The movie
-         grid stays a placeholder until TMDB is wired up in the next stage. -->
+    <section class="direct-search" id="direct-search" hidden>
+      <div class="direct-search-inner">
+        <p class="direct-eyebrow">JUMP TO A SPECIFIC MOMENT</p>
+        <h1>Enter a year</h1>
+        <p>Choose any year from 1940 to 2026.</p>
+        <div class="direct-form">
+          <input id="year-input" type="number" min="1940" max="2026" inputmode="numeric" placeholder="1995" aria-label="Year" />
+          <button id="direct-explore" type="button">EXPLORE</button>
+        </div>
+        <p class="input-error" id="input-error" role="alert" aria-live="polite"></p>
+      </div>
+    </section>
+
     <div class="results-view" id="results-view" hidden>
-
       <div class="results-backdrop" id="results-backdrop" aria-hidden="true"></div>
-
       <div class="results-inner">
-
         <header class="results-hero">
           <p class="results-eyebrow" id="results-eyebrow"></p>
           <h1 class="results-title" id="results-title"></h1>
@@ -99,18 +96,26 @@
         </section>
 
         <button class="btn-ghost explore-again" id="back-btn" type="button">‹ Explore another time</button>
-
       </div>
     </div>
 
+    <div class="tv-transition" id="tv-transition" hidden aria-hidden="true">
+      <div class="tv-glow"></div>
+      <div class="tv-set">
+        <div class="tv-screen">
+          <div class="tv-scanlines"></div>
+          <div class="tv-noise"></div>
+          <div class="tv-year" id="tv-year"></div>
+          <div class="tv-label">TIME TRAVEL</div>
+        </div>
+        <div class="tv-bezel"></div>
+      </div>
+    </div>
   </main>
 
-  <!-- Load order: themes before timeline (timeline calls TimeMachine.getThemeClassForYear),
-       then timeline before app (app calls TimeMachine.timeline.start). -->
   <script src="js/api.js"></script>
   <script src="js/themes.js"></script>
   <script src="js/timeline.js"></script>
   <script src="js/app.js"></script>
-
 </body>
 </html>

@@ -1,7 +1,6 @@
 window.TimeMachine = window.TimeMachine || {};
 
 (function () {
-
   const viewport = document.getElementById('timeline-viewport');
   const track = document.getElementById('timeline-track');
   const bgLayerA = document.getElementById('bg-layer-a');
@@ -10,35 +9,30 @@ window.TimeMachine = window.TimeMachine || {};
   const arrowLeft = document.getElementById('arrow-left');
   const arrowRight = document.getElementById('arrow-right');
 
-  let items = [];          // [{ value, label, themeClass }]
+  let items = [];
   let mode = 'year';
   let activeIndex = 0;
-  let offset = 0;           // current track translateX, in px
-  let itemSpacing = 200;    // distance between two item centers, measured after render
+  let offset = 0;
+  let itemSpacing = 200;
   let currentBgLayer = bgLayerA;
-
   let isDragging = false;
   let dragStartX = 0;
   let dragStartOffset = 0;
   let snapTimer = null;
 
-  // ---------- building the two data sets ----------
-
   function buildYearItems() {
     const arr = [];
-    for (let year = 1970; year <= 2029; year++) {
+    for (let year = 1940; year <= 2026; year++) {
       arr.push({ value: year, label: String(year), themeClass: TimeMachine.getThemeClassForYear(year) });
     }
     return arr;
   }
 
   function buildDecadeItems() {
-    return [1970, 1980, 1990, 2000, 2010, 2020].map(function (start) {
+    return [1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020].map(function (start) {
       return { value: start, label: start + 's', themeClass: TimeMachine.getThemeClassForYear(start) };
     });
   }
-
-  // ---------- rendering ----------
 
   function render() {
     track.innerHTML = '';
@@ -54,12 +48,8 @@ window.TimeMachine = window.TimeMachine || {};
 
   function measureSpacing() {
     const els = track.children;
-    if (els.length > 1) {
-      itemSpacing = els[1].offsetLeft - els[0].offsetLeft;
-    }
+    if (els.length > 1) itemSpacing = els[1].offsetLeft - els[0].offsetLeft;
   }
-
-  // ---------- positioning ----------
 
   function centerOffsetForIndex(index) {
     const el = track.children[index];
@@ -75,8 +65,6 @@ window.TimeMachine = window.TimeMachine || {};
     updateVisualState();
   }
 
-  // Scales/fades/blurs every item based on distance from viewport center,
-  // and figures out which item is currently closest to it.
   function updateVisualState() {
     const viewportCenter = viewport.clientWidth / 2;
     let closestIndex = activeIndex;
@@ -85,12 +73,10 @@ window.TimeMachine = window.TimeMachine || {};
     Array.from(track.children).forEach(function (el, index) {
       const itemCenter = el.offsetLeft + el.offsetWidth / 2 + offset;
       const dist = Math.abs(itemCenter - viewportCenter);
-
       if (dist < closestDist) {
         closestDist = dist;
         closestIndex = index;
       }
-
       const norm = Math.min(dist / (itemSpacing * 2.2), 1);
       el.style.transform = 'scale(' + (1 - norm * 0.55).toFixed(3) + ')';
       el.style.opacity = (1 - norm * 0.75).toFixed(3);
@@ -109,17 +95,13 @@ window.TimeMachine = window.TimeMachine || {};
     const item = items[activeIndex];
     crossfadeBackground(item.themeClass);
     TimeMachine.applyBodyTheme(item.themeClass);
-    enterBtn.textContent = mode === 'year'
-      ? 'ENTER ' + item.value
-      : 'EXPLORE THE ' + item.label.toUpperCase();
+    enterBtn.textContent = mode === 'year' ? 'ENTER ' + item.value : 'EXPLORE THE ' + item.label.toUpperCase();
   }
 
-  // Two stacked backdrop layers swap which one is on top, so the era
-  // pattern cross-fades instead of cutting instantly.
   function crossfadeBackground(themeClass) {
     const nextLayer = currentBgLayer === bgLayerA ? bgLayerB : bgLayerA;
     nextLayer.className = 'bg-layer era-' + themeClass.replace('theme-', '');
-    void nextLayer.offsetWidth; // force reflow so the opacity transition actually plays
+    void nextLayer.offsetWidth;
     nextLayer.classList.add('active');
     currentBgLayer.classList.remove('active');
     currentBgLayer = nextLayer;
@@ -130,8 +112,6 @@ window.TimeMachine = window.TimeMachine || {};
     applyOffset(centerOffsetForIndex(clamped), animate !== false);
   }
 
-  // ---------- input: mouse wheel / trackpad ----------
-
   function onWheel(e) {
     e.preventDefault();
     const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
@@ -139,8 +119,6 @@ window.TimeMachine = window.TimeMachine || {};
     clearTimeout(snapTimer);
     snapTimer = setTimeout(function () { goToIndex(activeIndex, true); }, 120);
   }
-
-  // ---------- input: drag (mouse + touch, via Pointer Events) ----------
 
   function onPointerDown(e) {
     isDragging = true;
@@ -151,8 +129,7 @@ window.TimeMachine = window.TimeMachine || {};
   }
 
   function onPointerMove(e) {
-    if (!isDragging) return;
-    applyOffset(dragStartOffset + (e.clientX - dragStartX), false);
+    if (isDragging) applyOffset(dragStartOffset + (e.clientX - dragStartX), false);
   }
 
   function onPointerUp() {
@@ -162,16 +139,12 @@ window.TimeMachine = window.TimeMachine || {};
     goToIndex(activeIndex, true);
   }
 
-  // ---------- input: keyboard ----------
-
   function onKeydown(e) {
     if (!track.children.length) return;
-    if (e.key === 'ArrowRight') { goToIndex(activeIndex + 1, true); }
-    else if (e.key === 'ArrowLeft') { goToIndex(activeIndex - 1, true); }
-    else if (e.key === 'Enter') { triggerEnter(); }
+    if (e.key === 'ArrowRight') goToIndex(activeIndex + 1, true);
+    else if (e.key === 'ArrowLeft') goToIndex(activeIndex - 1, true);
+    else if (e.key === 'Enter') triggerEnter();
   }
-
-  // ---------- entering a selection ----------
 
   function triggerEnter() {
     const item = items[activeIndex];
@@ -180,22 +153,17 @@ window.TimeMachine = window.TimeMachine || {};
     }));
   }
 
-  // ---------- public entry point (called from app.js) ----------
-
   function start(newMode) {
     mode = newMode;
     items = mode === 'year' ? buildYearItems() : buildDecadeItems();
-
     track.className = 'timeline-track mode-' + mode;
     track.dataset.needsInit = 'true';
     render();
     measureSpacing();
 
-    // Default to today's decade/year so the timeline opens somewhere relevant.
     const defaultValue = mode === 'year' ? 2026 : 2020;
     const defaultIndex = items.findIndex(function (i) { return i.value === defaultValue; });
     activeIndex = defaultIndex >= 0 ? defaultIndex : 0;
-
     goToIndex(activeIndex, false);
 
     arrowLeft.onclick = function () { goToIndex(activeIndex - 1, true); };
@@ -211,9 +179,8 @@ window.TimeMachine = window.TimeMachine || {};
   document.addEventListener('keydown', onKeydown);
   window.addEventListener('resize', function () {
     measureSpacing();
-    goToIndex(activeIndex, false);
+    if (track.children.length) goToIndex(activeIndex, false);
   });
 
   TimeMachine.timeline = { start: start };
-
 })();

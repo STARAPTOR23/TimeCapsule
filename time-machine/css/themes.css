@@ -1,63 +1,37 @@
-/* ==========================================================================
-   THE TIME MACHINE — era themes
-   Two things happen here per decade:
-   1. body.theme-XXXX sets --era-accent, used by the active timeline item
-      and the ENTER button.
-   2. .era-XXXX styles the backdrop layer behind the timeline with a
-      CSS-only pattern evoking that decade (grain, neon grid, scanlines,
-      bokeh, flat blocks, gradient mesh) — no external images or API keys
-      needed, so there's nothing to configure and nothing to attribute.
-   ========================================================================== */
+/* Existing 1970s–2020s themes are preserved. New 1940s–1960s themes are added. */
 
-/* ----- 1970s — Vintage ----- */
+/* 1940s — Wartime / Film Noir */
+body.theme-1940s { --era-accent: #d7c49a; }
+.bg-layer.era-1940s { background: radial-gradient(circle at 50% 40%, rgba(215,196,154,.18), transparent 50%), repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 2px, transparent 2px 5px), linear-gradient(135deg,#25231f,#0d0d0c 70%); }
+
+/* 1950s — Atomic Age / Americana */
+body.theme-1950s { --era-accent: #f2c14e; }
+.bg-layer.era-1950s { background: radial-gradient(circle at 25% 25%, rgba(242,193,78,.24), transparent 38%), radial-gradient(circle at 78% 70%, rgba(225,91,71,.18), transparent 40%), linear-gradient(135deg,#183d4b,#12262d 55%,#321f1c); }
+
+/* 1960s — Space Age / Psychedelic */
+body.theme-1960s { --era-accent: #ff8a3d; }
+.bg-layer.era-1960s { background: radial-gradient(circle at 30% 35%, rgba(255,138,61,.28), transparent 36%), radial-gradient(circle at 72% 65%, rgba(118,217,163,.22), transparent 38%), repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,.035) 0 8px, transparent 8px 24px), linear-gradient(135deg,#3c1939,#152d36); }
+
+/* 1970s — Vintage */
 body.theme-1970s { --era-accent: #d98e3f; }
-.bg-layer.era-1970s {
-  background:
-    radial-gradient(circle at 30% 20%, rgba(217, 142, 63, 0.35), transparent 55%),
-    radial-gradient(circle at 75% 80%, rgba(92, 69, 44, 0.4), transparent 60%),
-    linear-gradient(135deg, #2b1f14, #1c140d);
-}
+.bg-layer.era-1970s { background: radial-gradient(circle at 30% 20%, rgba(217,142,63,.35), transparent 55%), radial-gradient(circle at 75% 80%, rgba(92,69,44,.4), transparent 60%), linear-gradient(135deg,#2b1f14,#1c140d); }
 
-/* ----- 1980s — Neon / Retro ----- */
+/* 1980s — Neon / Retro */
 body.theme-1980s { --era-accent: #ff3ec8; }
-.bg-layer.era-1980s {
-  background:
-    repeating-linear-gradient(0deg, rgba(255, 62, 200, 0.12) 0 1px, transparent 1px 40px),
-    repeating-linear-gradient(90deg, rgba(33, 230, 255, 0.1) 0 1px, transparent 1px 40px),
-    radial-gradient(circle at 50% 100%, rgba(255, 62, 200, 0.35), transparent 60%),
-    linear-gradient(180deg, #120318, #1d0a29);
-}
+.bg-layer.era-1980s { background: repeating-linear-gradient(0deg, rgba(255,62,200,.12) 0 1px, transparent 1px 40px), repeating-linear-gradient(90deg, rgba(33,230,255,.1) 0 1px, transparent 1px 40px), radial-gradient(circle at 50% 100%, rgba(255,62,200,.35), transparent 60%), linear-gradient(180deg,#120318,#1d0a29); }
 
-/* ----- 1990s — VHS / Pixel / Grunge ----- */
+/* 1990s — VHS / Pixel / Grunge */
 body.theme-1990s { --era-accent: #39ff88; }
-.bg-layer.era-1990s {
-  background:
-    repeating-linear-gradient(0deg, rgba(57, 255, 136, 0.06) 0 2px, transparent 2px 4px),
-    radial-gradient(circle at 50% 50%, rgba(57, 255, 136, 0.12), transparent 70%),
-    linear-gradient(180deg, #101820, #0b1116);
-}
+.bg-layer.era-1990s { background: repeating-linear-gradient(0deg, rgba(57,255,136,.06) 0 2px, transparent 2px 4px), radial-gradient(circle at 50% 50%, rgba(57,255,136,.12), transparent 70%), linear-gradient(180deg,#101820,#0b1116); }
 
-/* ----- 2000s — Early Internet / Glossy ----- */
+/* 2000s — Early Internet / Glossy */
 body.theme-2000s { --era-accent: #2f8fef; }
-.bg-layer.era-2000s {
-  background:
-    radial-gradient(circle at 20% 30%, rgba(47, 143, 239, 0.35), transparent 40%),
-    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.22), transparent 35%),
-    radial-gradient(circle at 60% 78%, rgba(47, 143, 239, 0.25), transparent 45%),
-    linear-gradient(180deg, #103a63, #0a2540);
-}
+.bg-layer.era-2000s { background: radial-gradient(circle at 20% 30%, rgba(47,143,239,.35), transparent 40%), radial-gradient(circle at 80% 20%, rgba(255,255,255,.22), transparent 35%), radial-gradient(circle at 60% 78%, rgba(47,143,239,.25), transparent 45%), linear-gradient(180deg,#103a63,#0a2540); }
 
-/* ----- 2010s — Minimal / Flat ----- */
+/* 2010s — Minimal / Flat */
 body.theme-2010s { --era-accent: #4f7cff; }
-.bg-layer.era-2010s {
-  background: linear-gradient(135deg, #1c2333 0%, #1c2333 50%, #232b3d 50%, #232b3d 100%);
-}
+.bg-layer.era-2010s { background: linear-gradient(135deg,#1c2333 0%,#1c2333 50%,#232b3d 50%,#232b3d 100%); }
 
-/* ----- 2020s — Modern / Futuristic ----- */
+/* 2020s — Modern / Futuristic */
 body.theme-2020s { --era-accent: #8b6bff; }
-.bg-layer.era-2020s {
-  background:
-    radial-gradient(circle at 25% 30%, rgba(139, 107, 255, 0.35), transparent 45%),
-    radial-gradient(circle at 75% 70%, rgba(110, 231, 255, 0.25), transparent 45%),
-    linear-gradient(180deg, #05070c, #0a0e18);
-}
+.bg-layer.era-2020s { background: radial-gradient(circle at 25% 30%, rgba(139,107,255,.35), transparent 45%), radial-gradient(circle at 75% 70%, rgba(110,231,255,.25), transparent 45%), linear-gradient(180deg,#05070c,#0a0e18); }
