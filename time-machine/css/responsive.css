@@ -1,0 +1,60 @@
+/* ==========================================================================
+   THE TIME MACHINE — responsive rules
+   The timeline already uses clamp()/vw units so it scales reasonably on
+   its own. These rules cover the parts that need real adjustment on small
+   screens (drag/swipe still works via pointer events either way). A fuller
+   pass happens once the results page exists and there's more to fit.
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  .site-header {
+    padding: 0 18px;
+    height: 60px;
+  }
+
+  .brand {
+    font-size: 0.7rem;
+  }
+
+  .mode-nav {
+    gap: 14px;
+  }
+
+  .mode-btn {
+    font-size: 0.85rem;
+  }
+
+  .stage {
+    top: 60px;
+  }
+
+  .timeline-track.mode-year {
+    gap: 36px;
+  }
+
+  .timeline-track.mode-decade {
+    gap: 60px;
+  }
+
+  .scroll-arrow {
+    width: 38px;
+    height: 38px;
+    font-size: 1.2rem;
+  }
+
+  .scroll-arrow.left {
+    left: 10px;
+  }
+
+  .scroll-arrow.right {
+    right: 10px;
+  }
+
+  .timeline-ruler {
+    bottom: 100px;
+  }
+
+  .enter-panel {
+    bottom: 30px;
+  }
+}
