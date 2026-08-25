@@ -8,7 +8,6 @@ window.TimeMachine = window.TimeMachine || {};
   const yearInput = document.getElementById('year-input');
   const directExplore = document.getElementById('direct-explore');
   const inputError = document.getElementById('input-error');
-
   const resultsView = document.getElementById('results-view');
   const resultsBackdrop = document.getElementById('results-backdrop');
   const resultsEyebrow = document.getElementById('results-eyebrow');
@@ -18,7 +17,6 @@ window.TimeMachine = window.TimeMachine || {};
   const cultureList = document.getElementById('culture-list');
   const factsList = document.getElementById('facts-list');
   const backBtn = document.getElementById('back-btn');
-
   const tvTransition = document.getElementById('tv-transition');
   const tvYear = document.getElementById('tv-year');
 
@@ -44,10 +42,7 @@ window.TimeMachine = window.TimeMachine || {};
         if (!res.ok) throw new Error('Failed to load history.json');
         return res.json();
       })
-      .then(function (data) {
-        historyData = data;
-        return data;
-      })
+      .then(function (data) { historyData = data; return data; })
       .catch(function (err) {
         console.error('Could not load historical data:', err);
         historyData = { decades: {}, years: {} };
@@ -56,9 +51,7 @@ window.TimeMachine = window.TimeMachine || {};
     return historyLoadPromise;
   }
 
-  function decadeKeyFor(value) {
-    return Math.floor(value / 10) * 10 + 's';
-  }
+  function decadeKeyFor(value) { return Math.floor(value / 10) * 10 + 's'; }
 
   function getContentFor(mode, value) {
     const decadeKey = decadeKeyFor(value);
@@ -91,13 +84,11 @@ window.TimeMachine = window.TimeMachine || {};
   function selectMode(mode, activeBtn) {
     modeButtons.forEach(function (btn) { btn.classList.toggle('active', btn === activeBtn); });
     clearViews();
-
     if (mode === 'direct') {
       directSearch.hidden = false;
       yearInput.focus();
       return;
     }
-
     timelineView.hidden = false;
     TimeMachine.timeline.start(mode);
   }
@@ -105,19 +96,15 @@ window.TimeMachine = window.TimeMachine || {};
   function showTvTransition(mode, value, label) {
     const themeClass = TimeMachine.getThemeClassForYear(value);
     TimeMachine.applyBodyTheme(themeClass);
-    tvYear.textContent = mode === 'year' ? value : label;
+    tvYear.textContent = mode === 'year' || mode === 'direct' ? value : label;
     tvTransition.className = 'tv-transition';
     tvTransition.hidden = false;
-
-    // Reflow guarantees the opening animation starts from the closed TV state.
     void tvTransition.offsetWidth;
     tvTransition.classList.add('play');
 
     setTimeout(function () {
       showResults(mode, value, label);
-      setTimeout(function () {
-        tvTransition.classList.add('close');
-      }, 80);
+      setTimeout(function () { tvTransition.classList.add('close'); }, 80);
       setTimeout(function () {
         tvTransition.hidden = true;
         tvTransition.className = 'tv-transition';
@@ -131,11 +118,10 @@ window.TimeMachine = window.TimeMachine || {};
       const era = ERA_INFO[themeClass];
       const content = getContentFor(mode, value);
 
-      resultsBackdrop.className = 'results-backdrop era-' + themeClass.replace('theme-', '');
+      resultsBackdrop.className = 'results-backdrop bg-layer era-' + themeClass.replace('theme-', '');
       resultsEyebrow.textContent = era.label;
       resultsTitle.textContent = mode === 'year' || mode === 'direct' ? 'WELCOME TO ' + value : 'EXPLORING THE ' + label.toUpperCase();
       resultsDescription.textContent = era.description;
-
       fillList(eventsList, content.events);
       fillList(cultureList, content.culture);
       fillList(factsList, content.funFacts);
@@ -150,13 +136,11 @@ window.TimeMachine = window.TimeMachine || {};
   function exploreDirectYear() {
     const value = Number(yearInput.value);
     inputError.textContent = '';
-
     if (!isValidYear(value)) {
       inputError.textContent = 'Please enter a whole year from 1940 to 2026.';
       yearInput.focus();
       return;
     }
-
     modeButtons.forEach(function (btn) { btn.classList.toggle('active', btn.dataset.mode === 'direct'); });
     showTvTransition('direct', value, String(value));
   }
@@ -166,9 +150,7 @@ window.TimeMachine = window.TimeMachine || {};
   });
 
   directExplore.addEventListener('click', exploreDirectYear);
-  yearInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') exploreDirectYear();
-  });
+  yearInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') exploreDirectYear(); });
 
   document.addEventListener('timeline:enter', function (e) {
     showTvTransition(e.detail.mode, e.detail.value, e.detail.label);
