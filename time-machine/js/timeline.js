@@ -44,7 +44,7 @@ window.TimeMachine = window.TimeMachine || {};
     track.innerHTML = '';
     items.forEach(function (item, index) {
       const li = document.createElement('li');
-      li.className = 'timeline-item';
+      li.className = 'timeline-item cursor-target';
       li.dataset.index = index;
       li.innerHTML = '<span class="item-label">' + item.label + '</span>';
       li.addEventListener('click', function () { goToIndex(index, true); });

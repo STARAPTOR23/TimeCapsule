@@ -1,0 +1,112 @@
+/* ==========================================================================
+   THE TIME MACHINE — cursor & glow effects
+   Vanilla-JS recreations of two React components. See js/target-cursor.js
+   and js/border-glow.js for the logic that drives these.
+   ========================================================================== */
+
+/* ===== TARGET CURSOR ===== */
+
+body.has-target-cursor,
+body.has-target-cursor * {
+  cursor: none;
+}
+
+.target-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  z-index: 9999;
+  transition-property: left, top, width, height;
+  transition-timing-function: ease;
+}
+
+.target-cursor .target-corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--tc-color, #fff);
+  transition: border-color 0.2s ease;
+}
+
+.target-cursor .target-corner.tl { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+.target-cursor .target-corner.tr { top: -2px; right: -2px; border-left: none; border-bottom: none; }
+.target-cursor .target-corner.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; }
+.target-cursor .target-corner.br { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+
+.target-cursor .target-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin: -2px;
+  border-radius: 50%;
+  background: var(--tc-color, #fff);
+  transition: opacity 0.15s ease;
+}
+
+.target-cursor.on-target .target-dot {
+  opacity: 0;
+}
+
+.target-cursor.spin {
+  animation: targetCursorSpin linear infinite;
+  animation-duration: var(--tc-spin, 2s);
+}
+
+@keyframes targetCursorSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .target-cursor.spin {
+    animation: none;
+  }
+}
+
+/* ===== BORDER GLOW ===== */
+/* Apply the .border-glow class to any element, with data-* attributes for
+   configuration (data-edge-sensitivity, data-glow-color, data-glow-radius,
+   data-glow-intensity, data-cone-spread, data-colors, data-border-radius).
+   js/border-glow.js reads those once, then updates --glow-* custom
+   properties on mousemove. */
+
+.border-glow {
+  position: relative;
+  isolation: isolate;
+  --glow-opacity: 0;
+}
+
+/* The thin ring that traces the border itself. */
+.border-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: var(--glow-gradient, none);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: var(--glow-opacity, 0);
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* The soft blurred halo that spills outward behind the element. */
+.border-glow::after {
+  content: '';
+  position: absolute;
+  inset: calc(var(--glow-radius, 40px) * -1);
+  border-radius: inherit;
+  background: radial-gradient(circle at var(--glow-x, 50%) var(--glow-y, 50%), var(--glow-color, rgba(80, 160, 160, 0.5)), transparent 60%);
+  filter: blur(calc(var(--glow-radius, 40px) / 2));
+  opacity: calc(var(--glow-opacity, 0) * 0.7);
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  z-index: -1;
+}
