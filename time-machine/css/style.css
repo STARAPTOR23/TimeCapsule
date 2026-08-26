@@ -432,19 +432,204 @@ button {
   margin-bottom: 16px;
 }
 
-.results-list {
+/* ===== RESULTS GRID / CARDS ===== */
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.result-card {
+  position: relative;
+  background: rgba(15, 15, 18, 0.55);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.result-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--era-accent);
+  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.65);
+}
+
+/* Image slot for each card. Drop an <img> where the HTML comment says and
+   remove the placeholder <span> — this block already sizes/crops it. */
+.card-image {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+  border-bottom: 1px solid var(--line);
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.card-image-placeholder {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+}
+
+.card-body {
+  padding: 20px 22px 24px;
+}
+
+.card-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--era-accent);
+  margin-bottom: 10px;
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.3rem;
+  margin-bottom: 14px;
+}
+
+.card-list {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 9px;
 }
 
-.results-list li {
-  padding: 12px 14px;
-  border-left: 2px solid var(--era-accent);
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 0 6px 6px 0;
-  font-size: 0.96rem;
+.card-list li {
+  position: relative;
+  padding-left: 15px;
+  font-size: 0.9rem;
+  color: var(--paper);
+}
+
+.card-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--era-accent);
+}
+
+/* ===== EXPANDED CARD OVERLAY ===== */
+/* Rather than resizing the grid card in place (which would reflow the whole
+   grid), a click fills this fixed, full-screen overlay with the same data
+   and fades it in on top of everything. */
+
+.card-expanded-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  background: rgba(4, 4, 6, 0.88);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  animation: fadeIn 0.25s ease forwards;
+}
+
+.card-expanded-close {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--paper);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.card-expanded-close:hover {
+  border-color: var(--era-accent);
+  color: var(--era-accent);
+}
+
+.card-expanded-inner {
+  width: 100%;
+  max-width: 720px;
+  max-height: 100%;
+  overflow-y: auto;
+  background: var(--panel-color, #16171d);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  animation: expandIn 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes expandIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Same image slot pattern as the small card, just bigger — put the <img>
+   where the comment says in js/app.js's expanded-card template, or edit
+   the markup directly if you've made the overlay content static HTML. */
+.card-expanded-image {
+  aspect-ratio: 21 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+}
+
+.card-expanded-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-expanded-body {
+  padding: 34px 38px 40px;
+}
+
+.card-expanded-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--era-accent);
+  margin-bottom: 14px;
+}
+
+.card-expanded-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  margin-bottom: 20px;
+}
+
+.card-list.large li {
+  font-size: 1.05rem;
+  padding-left: 18px;
 }
 
 .movie-grid {
@@ -475,4 +660,250 @@ button {
 .btn-ghost:hover {
   border-color: var(--era-accent);
   color: var(--era-accent);
+}
+
+/* ===== DIRECT YEAR ENTRY ===== */
+
+.direct-view {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.direct-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.direct-form label {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+}
+
+.direct-input-row {
+  display: flex;
+  gap: 12px;
+}
+
+#direct-year-input {
+  width: 180px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  text-align: center;
+  padding: 12px 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#direct-year-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(231, 196, 107, 0.18);
+}
+
+.direct-submit {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--gold);
+  color: var(--ink);
+  border: none;
+  border-radius: 4px;
+  padding: 0 22px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.direct-submit:hover {
+  opacity: 0.85;
+}
+
+.direct-error {
+  min-height: 1.1em;
+  font-size: 0.82rem;
+  color: #e8746b;
+  font-family: var(--font-mono);
+}
+
+/* ===== TV TRANSITION ===== */
+/* A CSS-only retro TV. It pops in, the year flickers on the screen, then
+   the whole thing scales up as if the camera is zooming into the screen.
+   js/app.js swaps to the results view right as the zoom finishes. */
+
+.tv-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+}
+
+.tv-transition.playing {
+  display: flex;
+}
+
+.tv-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+}
+
+.tv-transition.playing .tv-flash {
+  animation: tvFlash 0.3s ease 1.15s forwards;
+}
+
+.tv {
+  position: relative;
+  width: 260px;
+  transform-origin: 50% 40%;
+}
+
+.tv-transition.playing .tv {
+  animation:
+    tvPopIn 0.35s ease-out both,
+    tvZoom 0.55s cubic-bezier(0.6, 0, 0.85, 0) 0.95s forwards;
+}
+
+.tv-body {
+  position: relative;
+  background: linear-gradient(160deg, #6b4a30, #4a3120);
+  border-radius: 18px;
+  padding: 22px 22px 30px;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.8), inset 0 0 0 2px rgba(255, 255, 255, 0.06);
+}
+
+.tv-screen {
+  position: relative;
+  background: #050505;
+  border-radius: 8px;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 6px #2b2b2b, inset 0 0 30px rgba(0, 0, 0, 0.9);
+}
+
+.tv-year {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  color: var(--gold);
+  text-shadow: 0 0 18px currentColor;
+  letter-spacing: 0.03em;
+}
+
+.tv-transition.playing .tv-year {
+  animation: tvFlicker 0.45s steps(3) 2 0.35s both;
+}
+
+.tv-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 6px;
+  top: -6px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.tv-transition.playing .tv-scanline {
+  animation: tvScan 1.6s linear infinite;
+}
+
+.tv-speaker {
+  margin-top: 14px;
+  height: 10px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.4) 0 3px, transparent 3px 7px);
+}
+
+.tv-knob {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #d9c7a3;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.tv-antenna {
+  position: absolute;
+  top: -46px;
+  width: 3px;
+  height: 50px;
+  background: #8a8a8a;
+}
+
+.tv-antenna.a1 {
+  left: 35%;
+  transform: rotate(-22deg);
+  transform-origin: bottom center;
+}
+
+.tv-antenna.a2 {
+  left: 60%;
+  transform: rotate(18deg);
+  transform-origin: bottom center;
+}
+
+.tv-stand {
+  width: 70%;
+  height: 12px;
+  margin: 0 auto;
+  background: #3a271a;
+  border-radius: 0 0 6px 6px;
+}
+
+@keyframes tvPopIn {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes tvZoom {
+  to { transform: scale(16); }
+}
+
+@keyframes tvFlicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+@keyframes tvScan {
+  0% { top: -6px; }
+  100% { top: 100%; }
+}
+
+@keyframes tvFlash {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tv-transition.playing .tv,
+  .tv-transition.playing .tv-year,
+  .tv-transition.playing .tv-scanline {
+    animation: none;
+  }
+  .tv-transition.playing .tv-flash {
+    animation: tvFlash 0.2s ease 0.3s forwards;
+  }
 }

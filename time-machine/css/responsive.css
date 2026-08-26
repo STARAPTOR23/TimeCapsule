@@ -57,4 +57,21 @@
   .enter-panel {
     bottom: 30px;
   }
+
+  .results-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-expanded-body {
+    padding: 24px 22px 30px;
+  }
+
+  .direct-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #direct-year-input {
+    width: 100%;
+  }
 }

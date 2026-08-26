@@ -26,14 +26,14 @@ window.TimeMachine = window.TimeMachine || {};
 
   function buildYearItems() {
     const arr = [];
-    for (let year = 1970; year <= 2029; year++) {
+    for (let year = 1940; year <= 2026; year++) {
       arr.push({ value: year, label: String(year), themeClass: TimeMachine.getThemeClassForYear(year) });
     }
     return arr;
   }
 
   function buildDecadeItems() {
-    return [1970, 1980, 1990, 2000, 2010, 2020].map(function (start) {
+    return [1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020].map(function (start) {
       return { value: start, label: start + 's', themeClass: TimeMachine.getThemeClassForYear(start) };
     });
   }

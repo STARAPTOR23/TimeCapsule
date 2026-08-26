@@ -15,13 +15,15 @@
 <body>
 
   <!-- ===== HEADER ===== -->
-  <!-- Minimal by design: just a mark and the two entry points into the timeline. -->
+  <!-- Minimal by design: just a mark and the three entry points into the timeline. -->
   <header class="site-header">
     <div class="brand">TIME MACHINE</div>
     <nav class="mode-nav">
       <button class="mode-btn" data-mode="year" type="button">Search by Year</button>
       <span class="nav-divider">|</span>
       <button class="mode-btn" data-mode="decade" type="button">Search by Decade</button>
+      <span class="nav-divider">|</span>
+      <button class="mode-btn" data-mode="direct" type="button">Enter a Year</button>
     </nav>
   </header>
 
@@ -60,6 +62,29 @@
 
     </section>
 
+    <!-- ===== DIRECT YEAR ENTRY ===== -->
+    <!-- Third search option: skip the timeline and type a year straight in.
+         Feeds into the same 'timeline:enter' event the timeline itself uses,
+         so it triggers the exact same TV transition + results flow. -->
+    <div class="direct-view" id="direct-view" hidden>
+      <form class="direct-form" id="direct-form" novalidate>
+        <label for="direct-year-input">Enter a year</label>
+        <div class="direct-input-row">
+          <input
+            type="number"
+            id="direct-year-input"
+            placeholder="e.g. 1995"
+            min="1940"
+            max="2026"
+            inputmode="numeric"
+            required
+          />
+          <button type="submit" class="direct-submit">Enter</button>
+        </div>
+        <p class="direct-error" id="direct-error" role="alert"></p>
+      </form>
+    </div>
+
     <!-- ===== RESULTS VIEW ===== -->
     <!-- Shown after ENTER. js/app.js loads data/history.json once, then fills
          in the hero text and the three local-data sections below. The movie
@@ -76,30 +101,95 @@
           <p class="results-description" id="results-description"></p>
         </header>
 
-        <section class="results-section">
-          <h2>Historical Events</h2>
-          <ul class="results-list" id="events-list"></ul>
-        </section>
+        <div class="results-grid" id="results-grid">
 
-        <section class="results-section">
-          <h2>Music &amp; Culture</h2>
-          <ul class="results-list" id="culture-list"></ul>
-        </section>
+          <!-- Each card has a .card-image slot. To add a real photo, delete
+               the placeholder <span> and put an <img> where the comment says,
+               e.g. <img src="assets/images/events-1995.jpg" alt="1995 events"> -->
 
-        <section class="results-section">
-          <h2>Fun Facts</h2>
-          <ul class="results-list" id="facts-list"></ul>
-        </section>
+          <article class="result-card" data-card-type="events">
+            <div class="card-image">
+              <!-- INSERT IMAGE HERE -->
+              <span class="card-image-placeholder">Image goes here</span>
+            </div>
+            <div class="card-body">
+              <p class="card-eyebrow">What happened</p>
+              <h2 class="card-title">Historical Events</h2>
+              <ul class="card-list" id="events-list"></ul>
+            </div>
+          </article>
 
-        <section class="results-section">
-          <h2>Movies</h2>
-          <div class="movie-grid" id="movie-grid">
-            <p class="movies-placeholder">Movie data arrives once TMDB is wired up in the next stage.</p>
-          </div>
-        </section>
+          <article class="result-card" data-card-type="movies">
+            <div class="card-image">
+              <!-- INSERT IMAGE HERE (e.g. a movie poster once TMDB is wired up) -->
+              <span class="card-image-placeholder">Image goes here</span>
+            </div>
+            <div class="card-body">
+              <p class="card-eyebrow">On screen</p>
+              <h2 class="card-title">Movies</h2>
+              <div class="movie-grid" id="movie-grid">
+                <p class="movies-placeholder">Movie data arrives once TMDB is wired up in the next stage.</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="result-card" data-card-type="culture">
+            <div class="card-image">
+              <!-- INSERT IMAGE HERE -->
+              <span class="card-image-placeholder">Image goes here</span>
+            </div>
+            <div class="card-body">
+              <p class="card-eyebrow">The sound &amp; style</p>
+              <h2 class="card-title">Music &amp; Culture</h2>
+              <ul class="card-list" id="culture-list"></ul>
+            </div>
+          </article>
+
+          <article class="result-card" data-card-type="funFacts">
+            <div class="card-image">
+              <!-- INSERT IMAGE HERE -->
+              <span class="card-image-placeholder">Image goes here</span>
+            </div>
+            <div class="card-body">
+              <p class="card-eyebrow">Did you know</p>
+              <h2 class="card-title">Fun Facts</h2>
+              <ul class="card-list" id="facts-list"></ul>
+            </div>
+          </article>
+
+        </div>
 
         <button class="btn-ghost explore-again" id="back-btn" type="button">‹ Explore another time</button>
 
+      </div>
+    </div>
+
+    <!-- Full-screen view for whichever card was clicked. app.js fills this
+         in from the same data used for the small card, so there's only one
+         place the content is ever defined. -->
+    <div class="card-expanded-overlay" id="card-expanded-overlay" hidden>
+      <button class="card-expanded-close" id="card-expanded-close" type="button" aria-label="Close">✕</button>
+      <div class="card-expanded-inner" id="card-expanded-inner"></div>
+    </div>
+
+    <!-- ===== TV TRANSITION ===== -->
+    <!-- Plays between "Explore" and the results page: a TV pops up showing
+         the selected year, then zooms into its own screen. js/app.js swaps
+         to the results view right as the zoom finishes. -->
+    <div class="tv-transition" id="tv-transition" hidden>
+      <div class="tv-flash" aria-hidden="true"></div>
+      <div class="tv" id="tv">
+        <div class="tv-antenna a1"></div>
+        <div class="tv-antenna a2"></div>
+        <div class="tv-body">
+          <div class="tv-screen">
+            <span class="tv-year" id="tv-year"></span>
+            <div class="tv-scanline"></div>
+          </div>
+          <div class="tv-speaker"></div>
+          <div class="tv-knob"></div>
+        </div>
+        <div class="tv-stand"></div>
       </div>
     </div>
 

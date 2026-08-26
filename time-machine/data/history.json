@@ -2,6 +2,57 @@
   "_comment": "Every decade has fallback content so no year is ever empty. Individual years in the 'years' object override the decade fallback when present. To add a new year, just add a key here — nothing else needs to change.",
 
   "decades": {
+    "1940s": {
+      "events": [
+        "World War II ended in 1945.",
+        "The United Nations was founded to help maintain international peace.",
+        "Rationing shaped daily life for millions of households."
+      ],
+      "culture": [
+        "Radio was the dominant home entertainment medium.",
+        "Big band and swing music filled dance halls.",
+        "Newsreels brought war coverage to movie theaters."
+      ],
+      "funFacts": [
+        "Many household goods were rationed using ration books.",
+        "Home television sets were still rare and experimental.",
+        "Victory gardens helped families grow their own food."
+      ]
+    },
+    "1950s": {
+      "events": [
+        "The Cold War drove a wave of space and technology competition.",
+        "Television became a fixture in millions of homes.",
+        "The postwar economic boom reshaped suburbs and consumer culture."
+      ],
+      "culture": [
+        "Rock and roll emerged as a defining new sound.",
+        "Drive-in movies and diners became social hotspots.",
+        "Chrome-heavy car design symbolized the era's optimism."
+      ],
+      "funFacts": [
+        "Hula hoops became a massive fad.",
+        "Credit cards were introduced for everyday purchases.",
+        "The first color television broadcasts began reaching households."
+      ]
+    },
+    "1960s": {
+      "events": [
+        "The first human moon landing capped the space race.",
+        "The civil rights movement drove major social and legal change.",
+        "Television became the primary way people followed world events."
+      ],
+      "culture": [
+        "Psychedelic art and rock music defined youth culture.",
+        "Mod fashion embraced bold colors and geometric patterns.",
+        "Counterculture movements reshaped music, fashion, and politics."
+      ],
+      "funFacts": [
+        "Color television sets became increasingly common in homes.",
+        "Miniskirts became a bold new fashion statement.",
+        "Cassette tapes were introduced, foreshadowing the mixtape era."
+      ]
+    },
     "1970s": {
       "events": [
         "The Vietnam War came to an end in 1975.",

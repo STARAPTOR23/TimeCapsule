@@ -6,6 +6,9 @@ window.TimeMachine = window.TimeMachine || {};
 (function () {
 
   const RANGES = [
+    { start: 1940, end: 1949, cls: 'theme-1940s' },
+    { start: 1950, end: 1959, cls: 'theme-1950s' },
+    { start: 1960, end: 1969, cls: 'theme-1960s' },
     { start: 1970, end: 1979, cls: 'theme-1970s' },
     { start: 1980, end: 1989, cls: 'theme-1980s' },
     { start: 1990, end: 1999, cls: 'theme-1990s' },
