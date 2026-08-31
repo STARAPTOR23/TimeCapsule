@@ -1,7 +1,3 @@
-// Auto-generated from data/history.json — edit the .json file and re-run
-// the conversion, or edit this file directly (same structure either way).
-// Loaded as a plain <script> tag (not fetch()) so the site keeps working
-// when index.html is opened directly via file://, with no local server.
 window.TimeMachineData = window.TimeMachineData || {};
 window.TimeMachineData.history = {
   "_comment": "Every decade has fallback content so no year is ever empty. Individual years in the 'years' object override the decade fallback when present. To add a new year, just add a key here — nothing else needs to change.",
