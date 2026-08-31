@@ -124,7 +124,7 @@
             data-cone-spread="70"
             data-colors="#c084fc,#f472b6,#38bdf8"
           >
-            <div class="card-image">
+            <div class="card-image" id="events-card-image">
               <!-- INSERT IMAGE HERE -->
               <span class="card-image-placeholder">Image goes here</span>
             </div>
@@ -240,6 +240,14 @@
     </div>
 
   </main>
+
+  <!-- Data loads as plain scripts, not fetch() — fetch() of local files is
+       blocked by the browser's CORS policy when index.html is opened
+       directly via file://, with no server. Script tags aren't subject to
+       that restriction, so this keeps "just open the HTML file" working. -->
+  <script src="data/history.js"></script>
+  <script src="data/historicalEvent.js"></script>
+  <script src="data/movie.js"></script>
 
   <!-- Load order: themes before timeline (timeline calls TimeMachine.getThemeClassForYear),
        then timeline before app (app calls TimeMachine.timeline.start). The two

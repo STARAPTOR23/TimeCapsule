@@ -529,6 +529,57 @@ button {
   background: var(--era-accent);
 }
 
+.card-link {
+  color: var(--paper);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.card-link:hover {
+  color: var(--era-accent);
+  border-bottom-color: var(--era-accent);
+}
+
+.card-list-meta {
+  color: var(--paper-dim);
+  font-size: 0.82rem;
+}
+
+/* Small movie tiles inside the Movies card's .movie-grid. */
+.movie-mini {
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.movie-mini-title {
+  display: block;
+  font-size: 0.92rem;
+  color: var(--paper);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.movie-mini-title:hover {
+  color: var(--era-accent);
+  border-bottom-color: var(--era-accent);
+}
+
+.movie-mini-meta {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--paper-dim);
+}
+
+/* Larger spacing when these same components appear in the expanded overlay. */
+.movie-grid.large {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+
 /* ===== EXPANDED CARD OVERLAY ===== */
 /* Rather than resizing the grid card in place (which would reflow the whole
    grid), a click fills this fixed, full-screen overlay with the same data

@@ -21,8 +21,10 @@ window.TimeMachine = window.TimeMachine || {};
   const resultsDescription = document.getElementById('results-description');
   const resultsGrid = document.getElementById('results-grid');
   const eventsList = document.getElementById('events-list');
+  const eventsCardImage = document.getElementById('events-card-image');
   const cultureList = document.getElementById('culture-list');
   const factsList = document.getElementById('facts-list');
+  const movieGridEl = document.getElementById('movie-grid');
   const backBtn = document.getElementById('back-btn');
 
   const expandedOverlay = document.getElementById('card-expanded-overlay');
@@ -35,7 +37,7 @@ window.TimeMachine = window.TimeMachine || {};
   let lastMode = 'year';
 
   // Short flavor text for the results hero. Purely descriptive copy,
-  // separate from the historical/cultural data in history.json.
+  // separate from the historical/cultural data in the JSON files.
   const ERA_INFO = {
     'theme-1940s': { label: '1940s — Film Noir', description: 'Venetian-blind shadows, a single spotlight, and a world seen in stark black and white.' },
     'theme-1950s': { label: '1950s — Atomic Age', description: 'Starburst clocks, chrome tailfins, and the optimism of the atomic age.' },
@@ -48,8 +50,6 @@ window.TimeMachine = window.TimeMachine || {};
     'theme-2020s': { label: '2020s — Minimalism', description: 'Quiet interfaces, muted tones, and design that gets out of the way.' }
   };
 
-  // Metadata for each card, used both for the small grid card and for
-  // building the full-screen expanded view from the same data.
   const CARD_META = {
     events: { title: 'Historical Events', eyebrow: 'What happened' },
     culture: { title: 'Music & Culture', eyebrow: 'The sound & style' },
@@ -57,51 +57,107 @@ window.TimeMachine = window.TimeMachine || {};
     movies: { title: 'Movies', eyebrow: 'On screen' }
   };
 
-  // Loaded once and cached — no need to re-fetch on every selection.
-  let historyData = null;
-  let historyLoadPromise = null;
+  // ---------- data loading ----------
+  // Three sources: history.js (culture + fun facts, plus decade-level
+  // fallback text for events), historicalEvent.js (real dated events, some
+  // with images), and movie.js (real movie titles per year). Each is
+  // loaded as a plain script (see index.html) into window.TimeMachineData
+  // — not fetch() — so this keeps working when index.html is opened
+  // directly via file://, with no server.
 
-  // The events/culture/funFacts arrays currently on screen, kept around so
-  // the expanded-card overlay can reuse them without a second data lookup.
-  let currentContent = { events: [], culture: [], funFacts: [] };
+  let historyData = { decades: {}, years: {} };
+  let eventsData = [];
+  let moviesData = [];
+  let dataReady = false;
 
-  function loadHistoryData() {
-    if (historyLoadPromise) return historyLoadPromise;
-    historyLoadPromise = fetch('data/history.json')
-      .then(function (res) {
-        if (!res.ok) throw new Error('Failed to load history.json');
-        return res.json();
-      })
-      .then(function (data) {
-        historyData = data;
-        return data;
-      })
-      .catch(function (err) {
-        console.error('Could not load historical data:', err);
-        historyData = { decades: {}, years: {} };
-        return historyData;
-      });
-    return historyLoadPromise;
+  function loadAllData() {
+    if (!dataReady) {
+      const d = window.TimeMachineData || {};
+      if (!d.history || !d.historicalEvent || !d.movie) {
+        console.error('Historical data did not load — check that data/history.js, data/historicalEvent.js, and data/movie.js are present and loaded before js/app.js.');
+      }
+      historyData = d.history || { decades: {}, years: {} };
+      eventsData = d.historicalEvent || [];
+      moviesData = d.movie || [];
+      dataReady = true;
+    }
+    return Promise.resolve();
   }
 
-  // Decade key like "1990s" from either a year (1995) or a decade start (1990).
-  function decadeKeyFor(value) {
-    return Math.floor(value / 10) * 10 + 's';
+  function decadeOf(year) {
+    return Math.floor(year / 10) * 10;
   }
 
-  // Year-specific data wins when present; otherwise falls back to the
-  // whole decade's content so every year always has something to show.
-  function getContentFor(mode, value) {
-    const decadeKey = decadeKeyFor(value);
-    const decadeContent = (historyData.decades && historyData.decades[decadeKey]) || { events: [], culture: [], funFacts: [] };
+  // Exact year match first; falls back to any entry from the same decade;
+  // falls back again to the generic decade text from history.json so the
+  // card is never empty.
+  function getEventsFor(mode, value) {
+    const decade = mode === 'decade' ? value : decadeOf(value);
+    let matches = mode === 'year' ? eventsData.filter(function (e) { return e.year === value; }) : [];
 
+    if (!matches.length) {
+      matches = eventsData.filter(function (e) { return decadeOf(e.year) === decade; });
+    }
+
+    matches = matches.slice()
+      .sort(function (a, b) { return (a.date || '').localeCompare(b.date || ''); })
+      .slice(0, 8);
+
+    if (!matches.length) {
+      const decadeKey = decade + 's';
+      const fallbackText = (historyData.decades[decadeKey] && historyData.decades[decadeKey].events) || [];
+      matches = fallbackText.map(function (t) { return { event: t, date: '', image: '', wikipedia_url: '' }; });
+    }
+
+    return matches;
+  }
+
+  // Same idea, but movies has no decade-text fallback — if the dataset has
+  // nothing for that period (e.g. pre-1960), the card just says so.
+  function getMoviesFor(mode, value) {
+    const decade = mode === 'decade' ? value : decadeOf(value);
+    let matches = mode === 'year' ? moviesData.filter(function (m) { return m.year === value; }) : [];
+
+    if (!matches.length) {
+      matches = moviesData.filter(function (m) { return decadeOf(m.year) === decade; });
+    }
+
+    return matches.slice()
+      .sort(function (a, b) { return (a.release_date || '').localeCompare(b.release_date || ''); })
+      .slice(0, 6);
+  }
+
+  function getCultureFactsFor(mode, value) {
+    const decadeKey = (mode === 'decade' ? value : decadeOf(value)) + 's';
+    const decadeContent = historyData.decades[decadeKey] || { culture: [], funFacts: [] };
     if (mode === 'decade') return decadeContent;
-
-    const yearContent = historyData.years && historyData.years[String(value)];
-    return yearContent || decadeContent;
+    return historyData.years[String(value)] || decadeContent;
   }
 
-  function fillList(listEl, items) {
+  // ---------- small helpers ----------
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso + 'T00:00:00Z');
+    if (isNaN(d)) return iso;
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+  }
+
+  function setCardImage(containerEl, url, altText) {
+    containerEl.innerHTML = url
+      ? '<img src="' + url + '" alt="' + escapeHtml(altText) + '">'
+      : '<span class="card-image-placeholder">Image goes here</span>';
+  }
+
+  // ---------- filling the small grid cards ----------
+
+  function fillTextList(listEl, items) {
     listEl.innerHTML = '';
     (items || []).forEach(function (text) {
       const li = document.createElement('li');
@@ -110,25 +166,93 @@ window.TimeMachine = window.TimeMachine || {};
     });
   }
 
+  function fillEventsList(listEl, items) {
+    listEl.innerHTML = '';
+    items.forEach(function (item) {
+      const li = document.createElement('li');
+      if (item.wikipedia_url) {
+        const a = document.createElement('a');
+        a.href = item.wikipedia_url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.className = 'card-link';
+        a.textContent = item.event;
+        li.appendChild(a);
+      } else {
+        li.textContent = item.event;
+      }
+      if (item.date) {
+        const meta = document.createElement('span');
+        meta.className = 'card-list-meta';
+        meta.textContent = ' — ' + formatDate(item.date);
+        li.appendChild(meta);
+      }
+      listEl.appendChild(li);
+    });
+  }
+
+  function fillMoviesGrid(containerEl, items) {
+    containerEl.innerHTML = '';
+    if (!items.length) {
+      const p = document.createElement('p');
+      p.className = 'movies-placeholder';
+      p.textContent = 'No movies from this period in the dataset yet.';
+      containerEl.appendChild(p);
+      return;
+    }
+    items.forEach(function (m) {
+      const card = document.createElement('div');
+      card.className = 'movie-mini';
+
+      const title = document.createElement('a');
+      title.className = 'movie-mini-title';
+      title.href = m.wikipedia_url || '#';
+      title.target = '_blank';
+      title.rel = 'noopener';
+      title.textContent = m.name;
+
+      const meta = document.createElement('p');
+      meta.className = 'movie-mini-meta';
+      meta.textContent = [m.release_date ? formatDate(m.release_date) : '', m.country || ''].filter(Boolean).join(' · ');
+
+      card.appendChild(title);
+      card.appendChild(meta);
+      containerEl.appendChild(card);
+    });
+  }
+
   // ---------- results page ----------
 
+  let currentContent = { events: [], movies: [], culture: [], funFacts: [], eventsImage: '' };
+
   function showResults(mode, value, label) {
-    loadHistoryData().then(function () {
+    loadAllData().then(function () {
       const themeClass = TimeMachine.getThemeClassForYear(value);
       const era = ERA_INFO[themeClass];
-      const content = getContentFor(mode, value);
-      currentContent = content;
+
+      const events = getEventsFor(mode, value);
+      const movies = getMoviesFor(mode, value);
+      const cultureFacts = getCultureFactsFor(mode, value);
+      const eventsImage = (events.find(function (e) { return e.image; }) || {}).image || '';
+
+      currentContent = {
+        events: events,
+        movies: movies,
+        culture: cultureFacts.culture || [],
+        funFacts: cultureFacts.funFacts || [],
+        eventsImage: eventsImage
+      };
 
       resultsBackdrop.className = 'results-backdrop era-' + themeClass.replace('theme-', '');
       resultsEyebrow.textContent = era.label;
       resultsTitle.textContent = mode === 'year' ? 'WELCOME TO ' + value : 'EXPLORING THE ' + label.toUpperCase();
       resultsDescription.textContent = era.description;
 
-      fillList(eventsList, content.events);
-      fillList(cultureList, content.culture);
-      fillList(factsList, content.funFacts);
-
-      // Movie grid stays a placeholder — TMDB integration is a later stage.
+      fillEventsList(eventsList, events);
+      fillTextList(cultureList, currentContent.culture);
+      fillTextList(factsList, currentContent.funFacts);
+      fillMoviesGrid(movieGridEl, movies);
+      setCardImage(eventsCardImage, eventsImage, 'Historical events');
 
       timelineView.hidden = true;
       directView.hidden = true;
@@ -138,33 +262,65 @@ window.TimeMachine = window.TimeMachine || {};
   }
 
   // ---------- card expand / collapse ----------
+  // Builds the full-screen view from the exact same currentContent used
+  // for the small cards, so nothing is ever defined twice.
+
+  function buildImageHTML(url, cardType, title) {
+    if (url) return '<div class="card-expanded-image"><img src="' + url + '" alt="' + escapeHtml(title) + '"></div>';
+    return '<div class="card-expanded-image"><!-- INSERT EXPANDED IMAGE HERE, e.g. <img src="assets/images/' + cardType + '.jpg" alt="' + title + '"> -->Image goes here</div>';
+  }
+
+  function eventsListHTML(items) {
+    if (!items.length) return '<p class="movies-placeholder">No recorded events for this period yet.</p>';
+    return '<ul class="card-list large">' + items.map(function (item) {
+      const dateStr = item.date ? ' <span class="card-list-meta">— ' + formatDate(item.date) + '</span>' : '';
+      const inner = item.wikipedia_url
+        ? '<a class="card-link" href="' + item.wikipedia_url + '" target="_blank" rel="noopener">' + escapeHtml(item.event) + '</a>'
+        : escapeHtml(item.event);
+      return '<li>' + inner + dateStr + '</li>';
+    }).join('') + '</ul>';
+  }
+
+  function moviesListHTML(items) {
+    if (!items.length) return '<p class="movies-placeholder">No movies from this period in the dataset yet.</p>';
+    return '<div class="movie-grid large">' + items.map(function (m) {
+      const meta = [m.release_date ? formatDate(m.release_date) : '', m.country || ''].filter(Boolean).join(' · ');
+      const titleHtml = m.wikipedia_url
+        ? '<a class="movie-mini-title" href="' + m.wikipedia_url + '" target="_blank" rel="noopener">' + escapeHtml(m.name) + '</a>'
+        : '<span class="movie-mini-title">' + escapeHtml(m.name) + '</span>';
+      return '<div class="movie-mini">' + titleHtml + '<p class="movie-mini-meta">' + escapeHtml(meta) + '</p></div>';
+    }).join('') + '</div>';
+  }
+
+  function textListHTML(items) {
+    if (!items.length) return '<p class="movies-placeholder">Nothing recorded for this period yet.</p>';
+    return '<ul class="card-list large">' + items.map(function (t) { return '<li>' + escapeHtml(t) + '</li>'; }).join('') + '</ul>';
+  }
 
   function openExpandedCard(cardType) {
     const meta = CARD_META[cardType];
-    const items = cardType === 'movies' ? null : currentContent[cardType];
+    let bodyHtml;
+    let imageHtml;
 
-    let html = '';
-    html += '<div class="card-expanded-image">';
-    html += '<!-- INSERT EXPANDED IMAGE HERE, e.g. <img src="assets/images/' + cardType + '.jpg" alt="' + meta.title + '"> -->';
-    html += 'Image goes here';
-    html += '</div>';
-    html += '<div class="card-expanded-body">';
-    html += '<p class="card-expanded-eyebrow">' + meta.eyebrow + '</p>';
-    html += '<h2 class="card-expanded-title">' + meta.title + '</h2>';
-
-    if (items) {
-      html += '<ul class="card-list large">';
-      items.forEach(function (text) {
-        html += '<li>' + text + '</li>';
-      });
-      html += '</ul>';
+    if (cardType === 'events') {
+      bodyHtml = eventsListHTML(currentContent.events);
+      imageHtml = buildImageHTML(currentContent.eventsImage, cardType, meta.title);
+    } else if (cardType === 'movies') {
+      bodyHtml = moviesListHTML(currentContent.movies);
+      imageHtml = buildImageHTML('', cardType, meta.title);
     } else {
-      html += '<p class="movies-placeholder">Movie data arrives once TMDB is wired up in the next stage.</p>';
+      bodyHtml = textListHTML(currentContent[cardType]);
+      imageHtml = buildImageHTML('', cardType, meta.title);
     }
 
-    html += '</div>';
+    expandedInner.innerHTML =
+      imageHtml +
+      '<div class="card-expanded-body">' +
+      '<p class="card-expanded-eyebrow">' + meta.eyebrow + '</p>' +
+      '<h2 class="card-expanded-title">' + meta.title + '</h2>' +
+      bodyHtml +
+      '</div>';
 
-    expandedInner.innerHTML = html;
     expandedOverlay.hidden = false;
   }
 
@@ -174,7 +330,9 @@ window.TimeMachine = window.TimeMachine || {};
 
   resultsGrid.addEventListener('click', function (e) {
     const card = e.target.closest('.result-card');
-    if (card) openExpandedCard(card.dataset.cardType);
+    // Let clicks on real links (event/movie titles) navigate normally
+    // instead of opening the expanded overlay.
+    if (card && !e.target.closest('a')) openExpandedCard(card.dataset.cardType);
   });
 
   expandedClose.addEventListener('click', closeExpandedCard);
@@ -188,9 +346,6 @@ window.TimeMachine = window.TimeMachine || {};
   });
 
   // ---------- TV transition ----------
-  // Plays for ~1.55s: pop in -> year flickers on -> zooms into the screen.
-  // The results page is prepared underneath while it plays, so it's ready
-  // the instant the TV is hidden again.
 
   function playTvTransition(mode, value, label) {
     tvYearEl.textContent = mode === 'year' ? value : label;
@@ -269,7 +424,6 @@ window.TimeMachine = window.TimeMachine || {};
   });
 
   // ---------- entering from the timeline (year or decade) ----------
-  // timeline.js dispatches this same event for both year and decade mode.
 
   document.addEventListener('timeline:enter', function (e) {
     playTvTransition(e.detail.mode, e.detail.value, e.detail.label);
@@ -285,6 +439,6 @@ window.TimeMachine = window.TimeMachine || {};
   });
 
   // Warm the cache as soon as the page loads.
-  loadHistoryData();
+  loadAllData();
 
 })();
