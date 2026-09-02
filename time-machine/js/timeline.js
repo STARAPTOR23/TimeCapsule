@@ -40,6 +40,15 @@ window.TimeMachine = window.TimeMachine || {};
 
   // ---------- rendering ----------
 
+  // Manual double-click tracking, keyed by item index rather than relying
+  // on the browser's native dblclick — an off-center item starts sliding
+  // toward the middle the instant the first click lands, so by the time
+  // the second click arrives the element has moved out from under a
+  // stationary mouse and native dblclick pairing can miss it entirely.
+  let lastClickIndex = -1;
+  let lastClickTime = 0;
+  const DOUBLE_CLICK_MS = 400;
+
   function render() {
     track.innerHTML = '';
     items.forEach(function (item, index) {
@@ -47,7 +56,21 @@ window.TimeMachine = window.TimeMachine || {};
       li.className = 'timeline-item cursor-target';
       li.dataset.index = index;
       li.innerHTML = '<span class="item-label">' + item.label + '</span>';
-      li.addEventListener('click', function () { goToIndex(index, true); });
+      li.addEventListener('click', function () {
+        const now = Date.now();
+        const isDoubleClick = index === lastClickIndex && (now - lastClickTime) < DOUBLE_CLICK_MS;
+
+        goToIndex(index, true);
+
+        if (isDoubleClick) {
+          triggerEnter();
+          lastClickIndex = -1;
+          lastClickTime = 0;
+        } else {
+          lastClickIndex = index;
+          lastClickTime = now;
+        }
+      });
       track.appendChild(li);
     });
   }

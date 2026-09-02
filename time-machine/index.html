@@ -72,18 +72,27 @@
         <label for="direct-year-input">Enter a year</label>
         <div class="direct-input-row">
           <input
-            type="number"
+            type="text"
             id="direct-year-input"
             placeholder="e.g. 1995"
-            min="1940"
-            max="2026"
             inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="4"
+            autocomplete="off"
             required
           />
           <button type="submit" class="direct-submit cursor-target">Enter</button>
         </div>
         <p class="direct-error" id="direct-error" role="alert"></p>
       </form>
+    </div>
+
+    <!-- Shown instead of results when a year is correctly 4 digits but
+         outside the supported range (before 1940 or after 2026). -->
+    <div class="special-error-screen" id="special-error-screen" hidden>
+      <p class="special-error-icon" aria-hidden="true">⏳</p>
+      <h2 class="special-error-message" id="special-error-message"></h2>
+      <button class="btn-ghost cursor-target" id="special-error-back" type="button">‹ Try another year</button>
     </div>
 
     <!-- ===== RESULTS VIEW ===== -->

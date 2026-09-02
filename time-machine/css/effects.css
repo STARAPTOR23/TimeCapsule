@@ -67,6 +67,21 @@ body.has-target-cursor * {
   }
 }
 
+/* While a full-screen overlay (expanded card or TV transition) is open,
+   app.js adds this class to <body>. The custom cursor sits at z-index 9999
+   with no intervening stacking context, so without this it would draw on
+   top of controls inside the overlay — most noticeably the close button,
+   right when the mouse approaches it to click it. Native cursor takes over
+   instead, which is also just more predictable for modal interactions. */
+body.modal-cursor-off .target-cursor {
+  display: none;
+}
+
+body.modal-cursor-off,
+body.modal-cursor-off * {
+  cursor: auto !important;
+}
+
 /* ===== BORDER GLOW ===== */
 /* Apply the .border-glow class to any element, with data-* attributes for
    configuration (data-edge-sensitivity, data-glow-color, data-glow-radius,

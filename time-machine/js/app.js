@@ -31,6 +31,10 @@ window.TimeMachine = window.TimeMachine || {};
   const expandedInner = document.getElementById('card-expanded-inner');
   const expandedClose = document.getElementById('card-expanded-close');
 
+  const specialErrorScreen = document.getElementById('special-error-screen');
+  const specialErrorMessage = document.getElementById('special-error-message');
+  const specialErrorBack = document.getElementById('special-error-back');
+
   const tvTransition = document.getElementById('tv-transition');
   const tvYearEl = document.getElementById('tv-year');
 
@@ -263,69 +267,128 @@ window.TimeMachine = window.TimeMachine || {};
 
   // ---------- card expand / collapse ----------
   // Builds the full-screen view from the exact same currentContent used
-  // for the small cards, so nothing is ever defined twice.
+  // for the small cards, so nothing is ever defined twice. Each item
+  // (event, movie, culture note, or fun fact) becomes its own small card
+  // with an image slot, laid out in a horizontally-scrolling strip you
+  // browse the same way as the year/decade timeline.
 
   function buildImageHTML(url, cardType, title) {
     if (url) return '<div class="card-expanded-image"><img src="' + url + '" alt="' + escapeHtml(title) + '"></div>';
     return '<div class="card-expanded-image"><!-- INSERT EXPANDED IMAGE HERE, e.g. <img src="assets/images/' + cardType + '.jpg" alt="' + title + '"> -->Image goes here</div>';
   }
 
-  function eventsListHTML(items) {
-    if (!items.length) return '<p class="movies-placeholder">No recorded events for this period yet.</p>';
-    return '<ul class="card-list large">' + items.map(function (item) {
-      const dateStr = item.date ? ' <span class="card-list-meta">— ' + formatDate(item.date) + '</span>' : '';
-      const inner = item.wikipedia_url
-        ? '<a class="card-link" href="' + item.wikipedia_url + '" target="_blank" rel="noopener">' + escapeHtml(item.event) + '</a>'
-        : escapeHtml(item.event);
-      return '<li>' + inner + dateStr + '</li>';
-    }).join('') + '</ul>';
+  // Normalizes any of the four content types into a common shape so one
+  // renderer can build sub-cards for all of them.
+  function normalizeSubItems(cardType, rawItems) {
+    if (cardType === 'events') {
+      return rawItems.map(function (e) {
+        return { image: e.image || '', title: e.event, meta: e.date ? formatDate(e.date) : '', link: e.wikipedia_url || '' };
+      });
+    }
+    if (cardType === 'movies') {
+      return rawItems.map(function (m) {
+        const meta = [m.release_date ? formatDate(m.release_date) : '', m.country || ''].filter(Boolean).join(' · ');
+        return { image: '', title: m.name, meta: meta, link: m.wikipedia_url || '' };
+      });
+    }
+    // culture / funFacts: plain strings, no per-item image or link.
+    return rawItems.map(function (text) {
+      return { image: '', title: text, meta: '', link: '' };
+    });
   }
 
-  function moviesListHTML(items) {
-    if (!items.length) return '<p class="movies-placeholder">No movies from this period in the dataset yet.</p>';
-    return '<div class="movie-grid large">' + items.map(function (m) {
-      const meta = [m.release_date ? formatDate(m.release_date) : '', m.country || ''].filter(Boolean).join(' · ');
-      const titleHtml = m.wikipedia_url
-        ? '<a class="movie-mini-title" href="' + m.wikipedia_url + '" target="_blank" rel="noopener">' + escapeHtml(m.name) + '</a>'
-        : '<span class="movie-mini-title">' + escapeHtml(m.name) + '</span>';
-      return '<div class="movie-mini">' + titleHtml + '<p class="movie-mini-meta">' + escapeHtml(meta) + '</p></div>';
-    }).join('') + '</div>';
+  function subCardsStripHTML(items, cardType) {
+    if (!items.length) {
+      return '<p class="movies-placeholder">Nothing recorded for this period yet.</p>';
+    }
+    const cards = items.map(function (it) {
+      const imgInner = it.image
+        ? '<img src="' + it.image + '" alt="' + escapeHtml(it.title) + '">'
+        : '<!-- INSERT IMAGE HERE, e.g. <img src="assets/images/' + cardType + '.jpg" alt=""> --><span class="card-image-placeholder">Image goes here</span>';
+      const titleInner = it.link
+        ? '<a class="card-link" href="' + it.link + '" target="_blank" rel="noopener">' + escapeHtml(it.title) + '</a>'
+        : escapeHtml(it.title);
+      const metaHtml = it.meta ? '<p class="expanded-subcard-meta">' + escapeHtml(it.meta) + '</p>' : '';
+      return (
+        '<div class="expanded-subcard">' +
+          '<div class="expanded-subcard-image">' + imgInner + '</div>' +
+          '<div class="expanded-subcard-body">' +
+            '<p class="expanded-subcard-title">' + titleInner + '</p>' +
+            metaHtml +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+    return '<div class="expanded-strip cursor-target"><div class="expanded-strip-track">' + cards + '</div></div>';
   }
 
-  function textListHTML(items) {
-    if (!items.length) return '<p class="movies-placeholder">Nothing recorded for this period yet.</p>';
-    return '<ul class="card-list large">' + items.map(function (t) { return '<li>' + escapeHtml(t) + '</li>'; }).join('') + '</ul>';
+  // Lightweight horizontal-scroll behavior for the sub-card strip: wheel
+  // scrolling and click-drag, same interaction family as the main timeline
+  // but without its centering/scaling — this just needs to scroll.
+  function initExpandedScroll(el) {
+    el.addEventListener('wheel', function (e) {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    }, { passive: false });
+
+    let isDown = false;
+    let startX = 0;
+    let startScroll = 0;
+
+    el.addEventListener('pointerdown', function (e) {
+      isDown = true;
+      startX = e.clientX;
+      startScroll = el.scrollLeft;
+      el.classList.add('dragging');
+      el.setPointerCapture(e.pointerId);
+    });
+    el.addEventListener('pointermove', function (e) {
+      if (!isDown) return;
+      el.scrollLeft = startScroll - (e.clientX - startX);
+    });
+    el.addEventListener('pointerup', function () {
+      isDown = false;
+      el.classList.remove('dragging');
+    });
+    el.addEventListener('pointercancel', function () {
+      isDown = false;
+      el.classList.remove('dragging');
+    });
   }
 
   function openExpandedCard(cardType) {
     const meta = CARD_META[cardType];
-    let bodyHtml;
-    let imageHtml;
+    const rawItems = cardType === 'events' ? currentContent.events
+      : cardType === 'movies' ? currentContent.movies
+      : currentContent[cardType];
 
-    if (cardType === 'events') {
-      bodyHtml = eventsListHTML(currentContent.events);
-      imageHtml = buildImageHTML(currentContent.eventsImage, cardType, meta.title);
-    } else if (cardType === 'movies') {
-      bodyHtml = moviesListHTML(currentContent.movies);
-      imageHtml = buildImageHTML('', cardType, meta.title);
-    } else {
-      bodyHtml = textListHTML(currentContent[cardType]);
-      imageHtml = buildImageHTML('', cardType, meta.title);
-    }
+    const items = normalizeSubItems(cardType, rawItems);
+    const stripHtml = subCardsStripHTML(items, cardType);
+
+    // Only the "events" type currently has a hero image (real data from
+    // historicalEvent.json); the others show the placeholder + insertion
+    // comment until you have images to drop in for them too.
+    const heroImage = cardType === 'events' ? currentContent.eventsImage : '';
 
     expandedInner.innerHTML =
-      imageHtml +
-      '<div class="card-expanded-body">' +
-      '<p class="card-expanded-eyebrow">' + meta.eyebrow + '</p>' +
-      '<h2 class="card-expanded-title">' + meta.title + '</h2>' +
-      bodyHtml +
-      '</div>';
+      buildImageHTML(heroImage, cardType, meta.title) +
+      '<div class="card-expanded-header">' +
+        '<p class="card-expanded-eyebrow">' + meta.eyebrow + '</p>' +
+        '<h2 class="card-expanded-title">' + meta.title + '</h2>' +
+      '</div>' +
+      stripHtml;
+
+    const stripEl = expandedInner.querySelector('.expanded-strip');
+    if (stripEl) initExpandedScroll(stripEl);
 
     expandedOverlay.hidden = false;
+    document.body.classList.add('modal-cursor-off');
   }
 
   function closeExpandedCard() {
     expandedOverlay.hidden = true;
+    document.body.classList.remove('modal-cursor-off');
   }
 
   resultsGrid.addEventListener('click', function (e) {
@@ -354,12 +417,14 @@ window.TimeMachine = window.TimeMachine || {};
     tvTransition.classList.remove('playing');
     void tvTransition.offsetWidth; // force reflow so the animation restarts every time
     tvTransition.classList.add('playing');
+    document.body.classList.add('modal-cursor-off');
 
     showResults(mode, value, label);
 
     setTimeout(function () {
       tvTransition.classList.remove('playing');
       tvTransition.hidden = true;
+      document.body.classList.remove('modal-cursor-off');
     }, 1550);
   }
 
@@ -376,6 +441,7 @@ window.TimeMachine = window.TimeMachine || {};
     resultsView.hidden = true;
     tvTransition.hidden = true;
     tvTransition.classList.remove('playing');
+    specialErrorScreen.hidden = true;
 
     if (mode === 'direct') {
       timelineView.hidden = true;
@@ -398,25 +464,50 @@ window.TimeMachine = window.TimeMachine || {};
 
   // ---------- direct year entry ----------
 
+  // Only digits, capped at 4 characters, enforced live as you type —
+  // maxlength alone doesn't stop pasted letters, and type="number" inputs
+  // have their own quirks (e/E, scientific notation, no real maxlength).
+  directInput.addEventListener('input', function () {
+    directInput.value = directInput.value.replace(/\D/g, '').slice(0, 4);
+  });
+
   function validateDirectYear(rawValue) {
     const trimmed = rawValue.trim();
+
     if (trimmed === '') return { valid: false, message: 'Please enter a year.' };
+    if (!/^\d{4}$/.test(trimmed)) return { valid: false, message: 'Enter exactly 4 digits, like 1995.' };
 
     const year = Number(trimmed);
-    if (!Number.isInteger(year)) return { valid: false, message: 'Years must be a whole number, like 1995.' };
-    if (year < MIN_YEAR || year > MAX_YEAR) {
-      return { valid: false, message: 'Please pick a year between ' + MIN_YEAR + ' and ' + MAX_YEAR + '.' };
-    }
+    if (year < MIN_YEAR) return { valid: false, special: 'past' };
+    if (year > MAX_YEAR) return { valid: false, special: 'future' };
     return { valid: true, year: year };
   }
+
+  function showSpecialError(message) {
+    specialErrorMessage.textContent = message;
+    directView.hidden = true;
+    specialErrorScreen.hidden = false;
+  }
+
+  specialErrorBack.addEventListener('click', function () {
+    specialErrorScreen.hidden = true;
+    directView.hidden = false;
+    directInput.value = '';
+    directError.textContent = '';
+    directInput.focus();
+  });
 
   directForm.addEventListener('submit', function (e) {
     e.preventDefault();
     const result = validateDirectYear(directInput.value);
+
+    if (result.special === 'past') return showSpecialError("We can't dig too deep in the past.");
+    if (result.special === 'future') return showSpecialError('Nobody knows the Future.');
     if (!result.valid) {
       directError.textContent = result.message;
       return;
     }
+
     directError.textContent = '';
     document.dispatchEvent(new CustomEvent('timeline:enter', {
       detail: { mode: 'year', value: result.year, label: String(result.year) }
