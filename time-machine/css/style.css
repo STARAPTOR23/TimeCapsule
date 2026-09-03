@@ -366,6 +366,7 @@ button {
   inset: 0;
   z-index: 0;
   background-size: cover;
+  pointer-events: none;
 }
 
 .results-backdrop::after {
@@ -373,46 +374,48 @@ button {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgba(6, 6, 8, 0.35) 0%, rgba(6, 6, 8, 0.72) 45%, rgba(6, 6, 8, 0.94) 100%);
+  pointer-events: none;
 }
 
 .results-inner {
   position: relative;
   z-index: 1;
-  max-width: 860px;
+  max-width: 1500px;
   margin: 0 auto;
-  padding: 130px 28px 90px;
+  padding: 104px 28px 50px;
   display: flex;
   flex-direction: column;
-  gap: 26px;
+  gap: 20px;
 }
 
 .results-hero {
   text-align: center;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .results-eyebrow {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--era-accent);
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .results-title {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(2.2rem, 6vw, 4rem);
+  font-size: clamp(1.8rem, 4.2vw, 2.8rem);
   letter-spacing: 0.02em;
 }
 
 .results-description {
-  margin-top: 16px;
+  margin-top: 10px;
   max-width: 56ch;
   margin-left: auto;
   margin-right: auto;
   color: var(--paper-dim);
+  font-size: 0.92rem;
 }
 
 .results-section {
@@ -433,19 +436,26 @@ button {
 }
 
 /* ===== RESULTS GRID / CARDS ===== */
+/* Each card fills a real quarter of the screen — not a small preview box.
+   grid-auto-rows uses minmax(vh, auto) so two rows plus gaps fill most of
+   the viewport height, leaving only a slim margin of backdrop visible. */
 
 .results-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  grid-auto-rows: minmax(220px, 36vh);
+  gap: 16px;
 }
 
 .result-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   background: rgba(15, 15, 18, 0.55);
   backdrop-filter: blur(8px);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
@@ -461,7 +471,9 @@ button {
    remove the placeholder <span> — this block already sizes/crops it. */
 .card-image {
   position: relative;
-  aspect-ratio: 16 / 9;
+  flex: 0 0 38%;
+  min-height: 0;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -473,7 +485,9 @@ button {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   display: block;
+  cursor: pointer;
 }
 
 .card-image-placeholder {
@@ -485,7 +499,20 @@ button {
 }
 
 .card-body {
-  padding: 20px 22px 24px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 22px 22px;
+  cursor: grab;
+}
+
+.card-body.dragging {
+  cursor: grabbing;
+}
+
+.card-body a,
+.expanded-strip a {
+  cursor: pointer;
 }
 
 .card-eyebrow {
@@ -494,14 +521,14 @@ button {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--era-accent);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .card-title {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: 1.3rem;
-  margin-bottom: 14px;
+  font-size: 1.4rem;
+  margin-bottom: 12px;
 }
 
 .card-list {
@@ -552,6 +579,22 @@ button {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--line);
   border-radius: 6px;
+  overflow: hidden;
+}
+
+.movie-mini-image {
+  aspect-ratio: 2 / 3;
+  margin: -12px -14px 10px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.movie-mini-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 .movie-mini-title {
@@ -574,12 +617,6 @@ button {
   color: var(--paper-dim);
 }
 
-/* Larger spacing when these same components appear in the expanded overlay. */
-.movie-grid.large {
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 14px;
-}
-
 /* ===== EXPANDED CARD OVERLAY ===== */
 /* Rather than resizing the grid card in place (which would reflow the whole
    grid), a click fills this fixed, full-screen overlay with the same data
@@ -592,8 +629,12 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 60px 24px;
-  background: rgba(4, 4, 6, 0.88);
+  /* Top padding = header height (72px) + the same 16px margin used on the
+     other three sides. Being position:fixed, this overlay ignores the
+     header's layout space entirely — without this, the header (z-index 50,
+     above this overlay's 40) visually slices off the top of the panel. */
+  padding: 88px 16px 16px;
+  background: rgba(4, 4, 6, 0.92);
   backdrop-filter: blur(6px);
   opacity: 0;
   animation: fadeIn 0.25s ease forwards;
@@ -601,45 +642,56 @@ button {
 
 .card-expanded-close {
   position: absolute;
-  top: 24px;
+  top: 84px;
   right: 28px;
-  width: 40px;
-  height: 40px;
+  z-index: 3;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(10, 10, 12, 0.9);
   color: var(--paper);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
 }
 
 .card-expanded-close:hover {
   border-color: var(--era-accent);
   color: var(--era-accent);
+  background: rgba(10, 10, 12, 1);
 }
 
+/* Near-fullscreen — only a thin frame of backdrop shows around the edges
+   (the overlay's own 16px padding above). */
 .card-expanded-inner {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 720px;
-  max-height: 100%;
-  overflow-y: auto;
+  height: 100%;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--panel-color, #16171d);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 16px;
   animation: expandIn 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 @keyframes expandIn {
-  from { transform: scale(0.9); opacity: 0; }
+  from { transform: scale(0.94); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
 
-/* Same image slot pattern as the small card, just bigger — put the <img>
-   where the comment says in js/app.js's expanded-card template, or edit
-   the markup directly if you've made the overlay content static HTML. */
+/* Same image slot pattern as the small card, just as a shorter banner
+   across the top of the fullscreen view. Put the <img> where the comment
+   says in js/app.js's buildImageHTML(), or edit the markup directly if
+   you've made the overlay content static HTML. */
 .card-expanded-image {
-  aspect-ratio: 21 / 9;
+  flex: 0 0 auto;
+  height: 22vh;
+  min-height: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -656,10 +708,12 @@ button {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
 }
 
-.card-expanded-body {
-  padding: 34px 38px 40px;
+.card-expanded-header {
+  flex: 0 0 auto;
+  padding: 26px 38px 18px;
 }
 
 .card-expanded-eyebrow {
@@ -668,19 +722,88 @@ button {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--era-accent);
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .card-expanded-title {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-  margin-bottom: 20px;
+  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
 }
 
-.card-list.large li {
-  font-size: 1.05rem;
-  padding-left: 18px;
+/* ===== EXPANDED SUB-CARD STRIP ===== */
+/* The events/movies/culture/facts inside an expanded card, laid out as a
+   horizontally-scrolling row — same interaction family as the year/decade
+   timeline (wheel + drag), just without the centering/scaling. */
+
+.expanded-strip {
+  flex: 1;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  cursor: grab;
+}
+
+.expanded-strip.dragging {
+  cursor: grabbing;
+}
+
+.expanded-strip-track {
+  display: flex;
+  align-items: stretch;
+  gap: 18px;
+  height: 100%;
+  padding: 0 38px 32px;
+}
+
+.expanded-subcard {
+  flex: 0 0 300px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.expanded-subcard-image {
+  flex: 0 0 55%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  text-align: center;
+  padding: 0 12px;
+}
+
+.expanded-subcard-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.expanded-subcard-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 18px 18px;
+}
+
+.expanded-subcard-title {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.expanded-subcard-meta {
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: var(--paper-dim);
 }
 
 .movie-grid {
@@ -696,8 +819,6 @@ button {
 }
 
 .btn-ghost {
-  align-self: center;
-  margin-top: 6px;
   background: none;
   border: 1px solid var(--line);
   color: var(--paper-dim);
@@ -711,6 +832,42 @@ button {
 .btn-ghost:hover {
   border-color: var(--era-accent);
   color: var(--era-accent);
+}
+
+/* ===== YEAR NAV ROW ===== */
+/* ±1 / ±10 year jumps flanking "Explore another time". Only shown in
+   year mode — jumping "years" from a decade selection isn't meaningful. */
+
+.year-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.year-nav-btn {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--paper-dim);
+  padding: 10px 16px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+.year-nav-btn:hover:not(:disabled) {
+  border-color: var(--era-accent);
+  color: var(--era-accent);
+}
+
+.year-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* ===== DIRECT YEAR ENTRY ===== */
@@ -957,4 +1114,53 @@ button {
   .tv-transition.playing .tv-flash {
     animation: tvFlash 0.2s ease 0.3s forwards;
   }
+}
+
+/* ===== SPECIAL ERROR SCREEN ===== */
+/* Shown from direct year entry when the year is properly 4 digits but
+   outside the supported range (before 1940 or after 2026). */
+
+.special-error-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  text-align: center;
+  padding: 0 24px;
+  animation: fadeIn 0.3s ease;
+}
+
+.special-error-icon {
+  font-size: 2.6rem;
+  opacity: 0.8;
+}
+
+.special-error-message {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.6rem, 4.5vw, 2.6rem);
+  max-width: 20ch;
+  color: var(--paper);
+}
+
+/* ===== HIDE NATIVE SCROLLBARS ===== */
+/* Every scrollable panel in the app stays fully scrollable (wheel, drag,
+   touch, keyboard) — this only hides the browser's default scrollbar
+   track/thumb, which clashed with the rest of the visual design. */
+.results-view,
+.card-body,
+.expanded-strip,
+.expanded-subcard-body {
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;    /* old Edge/IE */
+}
+
+.results-view::-webkit-scrollbar,
+.card-body::-webkit-scrollbar,
+.expanded-strip::-webkit-scrollbar,
+.expanded-subcard-body::-webkit-scrollbar {
+  display: none;               /* Chrome, Safari, new Edge */
 }

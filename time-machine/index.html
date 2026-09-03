@@ -20,11 +20,11 @@
   <header class="site-header">
     <div class="brand">TIME MACHINE</div>
     <nav class="mode-nav">
-      <button class="mode-btn cursor-target" data-mode="year" type="button">Search by Year</button>
+      <button class="mode-btn" data-mode="year" type="button">Search by Year</button>
       <span class="nav-divider">|</span>
-      <button class="mode-btn cursor-target" data-mode="decade" type="button">Search by Decade</button>
+      <button class="mode-btn" data-mode="decade" type="button">Search by Decade</button>
       <span class="nav-divider">|</span>
-      <button class="mode-btn cursor-target" data-mode="direct" type="button">Enter a Year</button>
+      <button class="mode-btn" data-mode="direct" type="button">Enter a Year</button>
     </nav>
   </header>
 
@@ -47,18 +47,18 @@
         <div class="bg-layer" id="bg-layer-b"></div>
       </div>
 
-      <button class="scroll-arrow left cursor-target" id="arrow-left" type="button" aria-label="Previous">‹</button>
+      <button class="scroll-arrow left" id="arrow-left" type="button" aria-label="Previous">‹</button>
 
       <div class="timeline-viewport" id="timeline-viewport">
         <ul class="timeline-track" id="timeline-track"></ul>
       </div>
 
-      <button class="scroll-arrow right cursor-target" id="arrow-right" type="button" aria-label="Next">›</button>
+      <button class="scroll-arrow right" id="arrow-right" type="button" aria-label="Next">›</button>
 
       <div class="timeline-ruler" aria-hidden="true"></div>
 
       <div class="enter-panel">
-        <button class="enter-btn cursor-target" id="enter-btn" type="button"></button>
+        <button class="enter-btn" id="enter-btn" type="button"></button>
       </div>
 
     </section>
@@ -72,24 +72,33 @@
         <label for="direct-year-input">Enter a year</label>
         <div class="direct-input-row">
           <input
-            type="number"
+            type="text"
             id="direct-year-input"
             placeholder="e.g. 1995"
-            min="1940"
-            max="2026"
             inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="4"
+            autocomplete="off"
             required
           />
-          <button type="submit" class="direct-submit cursor-target">Enter</button>
+          <button type="submit" class="direct-submit">Enter</button>
         </div>
         <p class="direct-error" id="direct-error" role="alert"></p>
       </form>
     </div>
 
+    <!-- Shown instead of results when a year is correctly 4 digits but
+         outside the supported range (before 1940 or after 2026). -->
+    <div class="special-error-screen" id="special-error-screen" hidden>
+      <p class="special-error-icon" aria-hidden="true">⏳</p>
+      <h2 class="special-error-message" id="special-error-message"></h2>
+      <button class="btn-ghost" id="special-error-back" type="button">‹ Try another year</button>
+    </div>
+
     <!-- ===== RESULTS VIEW ===== -->
-    <!-- Shown after ENTER. js/app.js loads data/history.json once, then fills
-         in the hero text and the three local-data sections below. The movie
-         grid stays a placeholder until TMDB is wired up in the next stage. -->
+    <!-- Shown after ENTER. Results are built from the four datasets loaded
+         via <script> tags at the bottom of the page (see data/*.js). The movie
+         grid stays a placeholder for any period with no matching entries. -->
     <div class="results-view" id="results-view" hidden>
 
       <div class="results-backdrop" id="results-backdrop" aria-hidden="true"></div>
@@ -109,12 +118,11 @@
                e.g. <img src="assets/images/events-1995.jpg" alt="1995 events">
 
                Each card is also a .border-glow (hover near its edges to see
-               the glow trace the border) and a .cursor-target (the custom
-               cursor frames it on hover). Tweak the data-* attributes to
+               the glow trace the border). Tweak the data-* attributes to
                retune edge sensitivity, colors, glow radius, etc. -->
 
           <article
-            class="result-card border-glow cursor-target"
+            class="result-card border-glow"
             data-card-type="events"
             data-edge-sensitivity="30"
             data-glow-color="40 80 80"
@@ -124,9 +132,8 @@
             data-cone-spread="70"
             data-colors="#c084fc,#f472b6,#38bdf8"
           >
-            <div class="card-image" id="events-card-image">
-              <!-- INSERT IMAGE HERE -->
-              <span class="card-image-placeholder">Image goes here</span>
+            <div class="card-image">
+              <img src="assets/images/card-events.gif" alt="Historical Events">
             </div>
             <div class="card-body">
               <p class="card-eyebrow">What happened</p>
@@ -136,7 +143,7 @@
           </article>
 
           <article
-            class="result-card border-glow cursor-target"
+            class="result-card border-glow"
             data-card-type="movies"
             data-edge-sensitivity="30"
             data-glow-color="40 80 80"
@@ -147,8 +154,7 @@
             data-colors="#c084fc,#f472b6,#38bdf8"
           >
             <div class="card-image">
-              <!-- INSERT IMAGE HERE (e.g. a movie poster once TMDB is wired up) -->
-              <span class="card-image-placeholder">Image goes here</span>
+              <img src="assets/images/card-movies.gif" alt="Movies">
             </div>
             <div class="card-body">
               <p class="card-eyebrow">On screen</p>
@@ -160,7 +166,7 @@
           </article>
 
           <article
-            class="result-card border-glow cursor-target"
+            class="result-card border-glow"
             data-card-type="culture"
             data-edge-sensitivity="30"
             data-glow-color="40 80 80"
@@ -171,8 +177,7 @@
             data-colors="#c084fc,#f472b6,#38bdf8"
           >
             <div class="card-image">
-              <!-- INSERT IMAGE HERE -->
-              <span class="card-image-placeholder">Image goes here</span>
+              <img src="assets/images/card-culture.gif" alt="Music & Culture">
             </div>
             <div class="card-body">
               <p class="card-eyebrow">The sound &amp; style</p>
@@ -182,7 +187,7 @@
           </article>
 
           <article
-            class="result-card border-glow cursor-target"
+            class="result-card border-glow"
             data-card-type="funFacts"
             data-edge-sensitivity="30"
             data-glow-color="40 80 80"
@@ -193,8 +198,7 @@
             data-colors="#c084fc,#f472b6,#38bdf8"
           >
             <div class="card-image">
-              <!-- INSERT IMAGE HERE -->
-              <span class="card-image-placeholder">Image goes here</span>
+              <img src="assets/images/card-facts.gif" alt="Fun Facts">
             </div>
             <div class="card-body">
               <p class="card-eyebrow">Did you know</p>
@@ -205,7 +209,16 @@
 
         </div>
 
-        <button class="btn-ghost explore-again cursor-target" id="back-btn" type="button">‹ Explore another time</button>
+        <!-- ±1 / ±10 year jumps (year mode only — hidden in decade mode via
+             app.js) so you can hop between nearby years without dropping
+             back to the scrolling timeline every time. -->
+        <div class="year-nav-row" id="year-nav-row">
+          <button class="year-nav-btn" id="nav-minus-10" type="button">‹‹ -10 Years</button>
+          <button class="year-nav-btn" id="nav-minus-1" type="button">‹ -1 Year</button>
+          <button class="btn-ghost explore-again" id="back-btn" type="button">Explore another time</button>
+          <button class="year-nav-btn" id="nav-plus-1" type="button">+1 Year ›</button>
+          <button class="year-nav-btn" id="nav-plus-10" type="button">+10 Years ››</button>
+        </div>
 
       </div>
     </div>
@@ -214,7 +227,7 @@
          in from the same data used for the small card, so there's only one
          place the content is ever defined. -->
     <div class="card-expanded-overlay" id="card-expanded-overlay" hidden>
-      <button class="card-expanded-close cursor-target" id="card-expanded-close" type="button" aria-label="Close">✕</button>
+      <button class="card-expanded-close" id="card-expanded-close" type="button" aria-label="Close">✕</button>
       <div class="card-expanded-inner" id="card-expanded-inner"></div>
     </div>
 
@@ -241,22 +254,23 @@
 
   </main>
 
-  <!-- Data loads as plain scripts, not fetch() — fetch() of local files is
-       blocked by the browser's CORS policy when index.html is opened
-       directly via file://, with no server. Script tags aren't subject to
-       that restriction, so this keeps "just open the HTML file" working. -->
-  <script src="data/history.js"></script>
+  <!-- Data loads as plain scripts into window.TimeMachineData (not fetch()),
+       so the site works when index.html is opened directly via file://,
+       with no local server needed. The matching .json files sit alongside
+       these in data/ as the editable source — only the .js versions are
+       actually loaded here. Must load before js/app.js. -->
   <script src="data/historicalEvent.js"></script>
+  <script src="data/music___culture.js"></script>
+  <script src="data/fun_fact.js"></script>
   <script src="data/movie.js"></script>
 
   <!-- Load order: themes before timeline (timeline calls TimeMachine.getThemeClassForYear),
-       then timeline before app (app calls TimeMachine.timeline.start). The two
-       effect scripts are independent of everything else and can load last. -->
+       then timeline before app (app calls TimeMachine.timeline.start). border-glow.js
+       is independent of everything else and can load last. -->
   <script src="js/api.js"></script>
   <script src="js/themes.js"></script>
   <script src="js/timeline.js"></script>
   <script src="js/app.js"></script>
-  <script src="js/target-cursor.js"></script>
   <script src="js/border-glow.js"></script>
 
 </body>

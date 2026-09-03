@@ -1,71 +1,8 @@
 /* ==========================================================================
-   THE TIME MACHINE — cursor & glow effects
-   Vanilla-JS recreations of two React components. See js/target-cursor.js
-   and js/border-glow.js for the logic that drives these.
+   THE TIME MACHINE — glow effect
+   Vanilla-JS recreation of a React component. See js/border-glow.js for
+   the logic that drives this.
    ========================================================================== */
-
-/* ===== TARGET CURSOR ===== */
-
-body.has-target-cursor,
-body.has-target-cursor * {
-  cursor: none;
-}
-
-.target-cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 24px;
-  height: 24px;
-  pointer-events: none;
-  z-index: 9999;
-  transition-property: left, top, width, height;
-  transition-timing-function: ease;
-}
-
-.target-cursor .target-corner {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border: 2px solid var(--tc-color, #fff);
-  transition: border-color 0.2s ease;
-}
-
-.target-cursor .target-corner.tl { top: -2px; left: -2px; border-right: none; border-bottom: none; }
-.target-cursor .target-corner.tr { top: -2px; right: -2px; border-left: none; border-bottom: none; }
-.target-cursor .target-corner.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; }
-.target-cursor .target-corner.br { bottom: -2px; right: -2px; border-left: none; border-top: none; }
-
-.target-cursor .target-dot {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 4px;
-  height: 4px;
-  margin: -2px;
-  border-radius: 50%;
-  background: var(--tc-color, #fff);
-  transition: opacity 0.15s ease;
-}
-
-.target-cursor.on-target .target-dot {
-  opacity: 0;
-}
-
-.target-cursor.spin {
-  animation: targetCursorSpin linear infinite;
-  animation-duration: var(--tc-spin, 2s);
-}
-
-@keyframes targetCursorSpin {
-  to { transform: rotate(360deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .target-cursor.spin {
-    animation: none;
-  }
-}
 
 /* ===== BORDER GLOW ===== */
 /* Apply the .border-glow class to any element, with data-* attributes for
