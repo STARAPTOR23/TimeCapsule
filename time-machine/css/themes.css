@@ -1,8 +1,14 @@
 /* ==========================================================================
    THE TIME MACHINE — era themes
-   Two things happen here per decade:
-   1. body.theme-XXXX sets --era-accent, used by the active timeline item
-      and the ENTER button.
+   Three things happen here per decade:
+   1. body.theme-XXXX sets --era-accent (highlights/text), --era-panel
+      (card/panel background tint), --era-border (card/panel border tint),
+      and --font-era-display (headline typeface) — these cascade through
+      the header, results cards, expanded overlay, sub-cards, and TV
+      transition, so the whole site reskins on every axis, not just an
+      accent dot here and there. (The timeline's own year/decade numbers
+      stay on the stable base font always — see --font-era-display's
+      comment in style.css for why.)
    2. .era-XXXX styles the backdrop layer behind the timeline with a
       CSS-only pattern evoking that decade's aesthetic — no external images
       or API keys needed, so there's nothing to configure and nothing to
@@ -16,18 +22,18 @@
 
 /* ----- 1940s — Film Noir ----- */
 /* High-contrast black and white, venetian-blind shadow stripes, a single spotlight. */
-body.theme-1940s { --era-accent: #c9c2ae; }
+body.theme-1940s { --era-accent: #c9c2ae; --era-panel: rgba(32, 30, 26, 0.6); --era-border: rgba(201, 194, 174, 0.28); --font-era-display: 'Special Elite', serif; }
 .bg-layer.era-1940s {
   background:
     repeating-linear-gradient(115deg, rgba(0, 0, 0, 0.35) 0 14px, transparent 14px 40px),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 3px),
     radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.1), transparent 55%),
     linear-gradient(160deg, #201e1a, #0c0b09);
 }
 
 /* ----- 1950s — Atomic Age ----- */
 /* Starburst-clock rays, pastel coral + turquoise, mid-century optimism. */
-body.theme-1950s { --era-accent: #5ec8d8; }
+body.theme-1950s { --era-accent: #5ec8d8; --era-panel: rgba(24, 38, 42, 0.55); --era-border: rgba(94, 200, 216, 0.28); --font-era-display: 'Righteous', sans-serif; }
 .bg-layer.era-1950s {
   background:
     repeating-conic-gradient(from 0deg at 50% 15%, rgba(255, 255, 255, 0.05) 0deg 6deg, transparent 6deg 18deg),
@@ -38,17 +44,17 @@ body.theme-1950s { --era-accent: #5ec8d8; }
 
 /* ----- 1960s — Space Age ----- */
 /* Deep-space navy, a scattered starfield, and a chrome-cyan orbit glow. */
-body.theme-1960s { --era-accent: #7ec8e3; }
+body.theme-1960s { --era-accent: #7ec8e3; --era-panel: rgba(10, 16, 26, 0.6); --era-border: rgba(126, 200, 227, 0.3); --font-era-display: 'Audiowide', sans-serif; }
 .bg-layer.era-1960s {
   background:
-    radial-gradient(circle, rgba(255, 255, 255, 0.15) 0 1px, transparent 2px) 0 0 / 60px 60px,
-    radial-gradient(circle, rgba(255, 255, 255, 0.12) 0 1px, transparent 2px) 20px 35px / 90px 90px,
+    radial-gradient(circle, rgba(255, 255, 255, 0.22) 0 1px, transparent 2px) 0 0 / 60px 60px,
+    radial-gradient(circle, rgba(255, 255, 255, 0.18) 0 1px, transparent 2px) 20px 35px / 90px 90px,
     radial-gradient(circle at 70% 65%, rgba(126, 200, 227, 0.35), transparent 45%),
     linear-gradient(160deg, #050b14, #0a1622);
 }
 
 /* ----- 1970s — Vintage ----- */
-body.theme-1970s { --era-accent: #d98e3f; }
+body.theme-1970s { --era-accent: #d98e3f; --era-panel: rgba(38, 28, 17, 0.55); --era-border: rgba(217, 142, 63, 0.3); --font-era-display: 'Abril Fatface', serif; }
 .bg-layer.era-1970s {
   background:
     radial-gradient(circle at 30% 20%, rgba(217, 142, 63, 0.35), transparent 55%),
@@ -57,7 +63,7 @@ body.theme-1970s { --era-accent: #d98e3f; }
 }
 
 /* ----- 1980s — Neon / Synthwave ----- */
-body.theme-1980s { --era-accent: #ff3ec8; }
+body.theme-1980s { --era-accent: #ff3ec8; --era-panel: rgba(28, 10, 38, 0.55); --era-border: rgba(255, 62, 200, 0.32); --font-era-display: 'Monoton', sans-serif; }
 .bg-layer.era-1980s {
   background:
     repeating-linear-gradient(0deg, rgba(255, 62, 200, 0.12) 0 1px, transparent 1px 40px),
@@ -68,7 +74,7 @@ body.theme-1980s { --era-accent: #ff3ec8; }
 
 /* ----- 1990s — VHS / Grunge ----- */
 /* Magenta/cyan tracking-line fringe over a gritty, desaturated olive base. */
-body.theme-1990s { --era-accent: #6fcf87; }
+body.theme-1990s { --era-accent: #6fcf87; --era-panel: rgba(16, 22, 14, 0.55); --era-border: rgba(111, 207, 135, 0.3); --font-era-display: 'Press Start 2P', system-ui; }
 .bg-layer.era-1990s {
   background:
     repeating-linear-gradient(0deg, rgba(255, 0, 150, 0.04) 0 2px, transparent 2px 4px),
@@ -79,7 +85,7 @@ body.theme-1990s { --era-accent: #6fcf87; }
 
 /* ----- 2000s — Y2K / Frutiger Aero ----- */
 /* Glossy aqua-blue gradients with big soft "glass bubble" highlights. */
-body.theme-2000s { --era-accent: #4fd1c5; }
+body.theme-2000s { --era-accent: #4fd1c5; --era-panel: rgba(10, 36, 46, 0.55); --era-border: rgba(79, 209, 197, 0.32); --font-era-display: 'Baloo 2', sans-serif; }
 .bg-layer.era-2000s {
   background:
     radial-gradient(circle at 18% 25%, rgba(255, 255, 255, 0.35), transparent 30%),
@@ -90,7 +96,7 @@ body.theme-2000s { --era-accent: #4fd1c5; }
 
 /* ----- 2010s — Flat Design / Social Media ----- */
 /* Hard-edged flat color blocks plus scattered flat dots, like notification bubbles. */
-body.theme-2010s { --era-accent: #4f7cff; }
+body.theme-2010s { --era-accent: #4f7cff; --era-panel: rgba(22, 27, 38, 0.55); --era-border: rgba(79, 124, 255, 0.3); --font-era-display: 'Space Grotesk', sans-serif; }
 .bg-layer.era-2010s {
   background:
     radial-gradient(circle at 20% 30%, rgba(79, 124, 255, 0.25) 0 40px, transparent 41px) 0 0 / 160px 160px,
@@ -100,10 +106,10 @@ body.theme-2010s { --era-accent: #4f7cff; }
 
 /* ----- 2020s — Minimalism ----- */
 /* Restraint as the aesthetic: a near-flat neutral base with a faint grid, nothing loud. */
-body.theme-2020s { --era-accent: #b8b2a5; }
+body.theme-2020s { --era-accent: #b8b2a5; --era-panel: rgba(16, 16, 16, 0.55); --era-border: rgba(184, 178, 165, 0.25); --font-era-display: 'Inter', sans-serif; }
 .bg-layer.era-2020s {
   background:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 120px),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 120px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 120px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 120px),
     linear-gradient(180deg, #0c0c0c, #050505);
 }

@@ -17,8 +17,18 @@
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Default accent before any era is active (idle state, initial paint). */
+  /* Used by results/header/TV text once a theme is active. Deliberately
+     separate from --font-display: the timeline's own year/decade numbers
+     stay on the stable Anton always, since swapping fonts on 87 items
+     mid-scroll would shift their measured widths out from under the
+     centering math. Everything else is free to go all-in on the era. */
+  --font-era-display: var(--font-display);
+
+  /* Defaults before any era is active (idle state, initial paint) — each
+     body.theme-XXXX class in themes.css overrides all three together. */
   --era-accent: var(--gold);
+  --era-panel: rgba(15, 15, 18, 0.55);
+  --era-border: var(--line);
 }
 
 * {
@@ -75,8 +85,9 @@ button {
 
 .brand::before {
   content: '●';
-  color: var(--gold);
+  color: var(--era-accent);
   font-size: 0.55rem;
+  transition: color 0.4s ease;
 }
 
 .mode-nav {
@@ -104,9 +115,9 @@ button {
   right: 0;
   bottom: 0;
   height: 2px;
-  background: var(--gold);
+  background: var(--era-accent);
   transform: scaleX(0);
-  transition: transform 0.25s ease;
+  transition: transform 0.25s ease, background-color 0.4s ease;
 }
 
 .mode-btn:hover {
@@ -312,6 +323,21 @@ button {
   z-index: 1;
 }
 
+.timeline-hint {
+  position: absolute;
+  top: 28px;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  opacity: 0.75;
+}
+
 /* ===== ENTER PANEL ===== */
 
 .enter-panel {
@@ -403,7 +429,7 @@ button {
 }
 
 .results-title {
-  font-family: var(--font-display);
+  font-family: var(--font-era-display);
   font-weight: 400;
   font-size: clamp(1.8rem, 4.2vw, 2.8rem);
   letter-spacing: 0.02em;
@@ -416,23 +442,6 @@ button {
   margin-right: auto;
   color: var(--paper-dim);
   font-size: 0.92rem;
-}
-
-.results-section {
-  background: rgba(15, 15, 18, 0.55);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 26px 28px 30px;
-}
-
-.results-section h2 {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 1.25rem;
-  letter-spacing: 0.02em;
-  color: var(--era-accent);
-  margin-bottom: 16px;
 }
 
 /* ===== RESULTS GRID / CARDS ===== */
@@ -452,9 +461,9 @@ button {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: rgba(15, 15, 18, 0.55);
+  background: var(--era-panel);
   backdrop-filter: blur(8px);
-  border: 1px solid var(--line);
+  border: 1px solid var(--era-border);
   border-radius: 14px;
   overflow: hidden;
   cursor: pointer;
@@ -525,7 +534,7 @@ button {
 }
 
 .card-title {
-  font-family: var(--font-display);
+  font-family: var(--font-era-display);
   font-weight: 400;
   font-size: 1.4rem;
   margin-bottom: 12px;
@@ -576,8 +585,8 @@ button {
 /* Small movie tiles inside the Movies card's .movie-grid. */
 .movie-mini {
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--line);
+  background: var(--era-panel);
+  border: 1px solid var(--era-border);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -673,8 +682,8 @@ button {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--panel-color, #16171d);
-  border: 1px solid var(--line);
+  background: var(--ink-panel);
+  border: 1px solid var(--era-border);
   border-radius: 16px;
   animation: expandIn 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
@@ -726,7 +735,7 @@ button {
 }
 
 .card-expanded-title {
-  font-family: var(--font-display);
+  font-family: var(--font-era-display);
   font-weight: 400;
   font-size: clamp(1.6rem, 3.4vw, 2.4rem);
 }
@@ -760,8 +769,8 @@ button {
   flex: 0 0 300px;
   display: flex;
   flex-direction: column;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--line);
+  background: var(--era-panel);
+  border: 1px solid var(--era-border);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -1010,9 +1019,9 @@ button {
 .tv-year {
   position: relative;
   z-index: 1;
-  font-family: var(--font-display);
+  font-family: var(--font-era-display);
   font-size: 2.4rem;
-  color: var(--gold);
+  color: var(--era-accent);
   text-shadow: 0 0 18px currentColor;
   letter-spacing: 0.03em;
 }

@@ -112,18 +112,27 @@ window.TimeMachine = window.TimeMachine || {};
   // and figures out which item is currently closest to it.
   function updateVisualState() {
     const viewportCenter = viewport.clientWidth / 2;
+
+    // First pass: find the truly-closest item before touching any styles.
+    // (Doing this in the same pass that applies styles was a real bug —
+    // comparing against a closestIndex that was still being updated mid-
+    // loop meant several items could flash the "active" glow on their way
+    // past, not just the one that ends up actually centered.)
     let closestIndex = activeIndex;
     let closestDist = Infinity;
-
     Array.from(track.children).forEach(function (el, index) {
       const itemCenter = el.offsetLeft + el.offsetWidth / 2 + offset;
       const dist = Math.abs(itemCenter - viewportCenter);
-
       if (dist < closestDist) {
         closestDist = dist;
         closestIndex = index;
       }
+    });
 
+    // Second pass: apply the visual treatment now that closestIndex is final.
+    Array.from(track.children).forEach(function (el, index) {
+      const itemCenter = el.offsetLeft + el.offsetWidth / 2 + offset;
+      const dist = Math.abs(itemCenter - viewportCenter);
       const norm = Math.min(dist / (itemSpacing * 2.2), 1);
       el.style.transform = 'scale(' + (1 - norm * 0.55).toFixed(3) + ')';
       el.style.opacity = (1 - norm * 0.75).toFixed(3);
@@ -227,14 +236,24 @@ window.TimeMachine = window.TimeMachine || {};
     arrowRight.onclick = function () { goToIndex(activeIndex + 1, true); };
     enterBtn.onclick = triggerEnter;
 
-    // Wait a frame before measuring/positioning. .timeline-view was just
-    // made visible (removed its `hidden` attribute) in this same tick —
-    // without this, the very first time the timeline appears, the browser
-    // can hand back stale/zero layout geometry (viewport.clientWidth,
-    // offsetLeft) for the freshly-unhidden, freshly-rendered track, which
-    // centers everything on a wrong offset and reads as a blank screen
-    // until the next interaction forces a recalculation.
-    requestAnimationFrame(function () {
+    // Wait until .timeline-viewport actually has a real, non-zero width
+    // before measuring/positioning anything. .timeline-view was just made
+    // visible (removed its `hidden` attribute) in this same tick, and in
+    // practice a single requestAnimationFrame isn't always enough for the
+    // browser to have committed that layout change — clientWidth can still
+    // read 0 one frame later. If that happens, the centering math targets
+    // the left edge of a "0-width" viewport instead of the real center,
+    // which shoves every item off-screen while all the *bookkeeping*
+    // (active index, theme, button text) stays perfectly self-consistent —
+    // which is exactly why the year/theme could look right while the
+    // timeline itself appeared completely blank. Retrying every frame
+    // until the width is real removes the guesswork entirely.
+    function positionOnceReady() {
+      if (!viewport.clientWidth) {
+        requestAnimationFrame(positionOnceReady);
+        return;
+      }
+
       measureSpacing();
 
       // Default to today's decade/year so the timeline opens somewhere relevant.
@@ -243,7 +262,22 @@ window.TimeMachine = window.TimeMachine || {};
       activeIndex = defaultIndex >= 0 ? defaultIndex : 0;
 
       goToIndex(activeIndex, false);
-    });
+    }
+
+    requestAnimationFrame(positionOnceReady);
+
+    // Belt-and-suspenders: if the display font ('Anton') is still loading
+    // when positionOnceReady ran, items get measured using the fallback
+    // font's (different) widths. Once the real font swaps in, every
+    // item's actual width can shift, which drifts the centering math out
+    // from under the layout we already computed. Re-measuring once fonts
+    // are confirmed loaded corrects for that.
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function () {
+        measureSpacing();
+        goToIndex(activeIndex, false);
+      });
+    }
   }
 
   viewport.addEventListener('wheel', onWheel, { passive: false });

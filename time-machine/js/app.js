@@ -69,7 +69,7 @@ window.TimeMachine = window.TimeMachine || {};
     movies: { title: 'Movies', eyebrow: 'On screen', gif: 'assets/images/card-movies.gif' }
   };
 
-
+  // ---------- data loading ----------
   // Four datasets, loaded as plain <script> tags into window.TimeMachineData
   // (see index.html) rather than fetch() — so the site keeps working when
   // index.html is opened directly via file://, with no local server. The
@@ -135,58 +135,17 @@ window.TimeMachine = window.TimeMachine || {};
     return d2.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
   }
 
-  // Slowly scrolls a panel back and forth so its content is visible without
-  // needing a visible scrollbar, pauses the instant the user hovers,
-  // wheels, or drags it, and resumes a little while after they stop.
-  // Works for either axis and coexists with real <a> links inside — a
-  // gesture that starts on a link is left alone entirely so the browser's
-  // native click/navigation isn't disturbed.
-  function initAutoScroll(el, axis) {
+  // ---------- drag-to-scroll ----------
+  // Manual drag-to-scroll for a panel whose native scrollbar is hidden —
+  // native mouse wheel already scrolls it fine on its own (that's just how
+  // overflow works), this only adds click-and-drag. A gesture that starts
+  // on a real <a> link is left alone entirely so clicks/navigation aren't
+  // disturbed, and a small drag-distance threshold stops a genuine drag
+  // from being mistaken for a click once it's released.
+  function initDragScroll(el, axis) {
     const vertical = axis === 'vertical';
-    const SPEED = 16;          // px / second
-    const EDGE_PAUSE = 900;    // ms to sit at each end before reversing
-    const RESUME_DELAY = 1400; // ms of inactivity before auto-scroll resumes
-
-    let direction = 1;
-    let paused = false;
-    let pauseUntil = 0;
-    let lastTime = null;
-    let resumeTimer = null;
-    let rafId = null;
-
-    function maxScroll() {
-      return vertical ? (el.scrollHeight - el.clientHeight) : (el.scrollWidth - el.clientWidth);
-    }
     function getScroll() { return vertical ? el.scrollTop : el.scrollLeft; }
     function setScroll(v) { if (vertical) el.scrollTop = v; else el.scrollLeft = v; }
-
-    function tick(time) {
-      rafId = requestAnimationFrame(tick);
-      const max = maxScroll();
-      if (max <= 2 || paused || time < pauseUntil) { lastTime = null; return; }
-      if (lastTime === null) { lastTime = time; return; }
-
-      const dt = (time - lastTime) / 1000;
-      lastTime = time;
-
-      let next = getScroll() + direction * SPEED * dt;
-      if (next >= max) { next = max; direction = -1; pauseUntil = time + EDGE_PAUSE; }
-      else if (next <= 0) { next = 0; direction = 1; pauseUntil = time + EDGE_PAUSE; }
-      setScroll(next);
-    }
-
-    function pause() {
-      paused = true;
-      clearTimeout(resumeTimer);
-    }
-    function scheduleResume(delay) {
-      clearTimeout(resumeTimer);
-      resumeTimer = setTimeout(function () { paused = false; lastTime = null; }, delay);
-    }
-
-    el.addEventListener('mouseenter', pause);
-    el.addEventListener('mouseleave', function () { scheduleResume(400); });
-    el.addEventListener('wheel', function () { pause(); scheduleResume(RESUME_DELAY); }, { passive: true });
 
     let isDown = false;
     let startPos = 0;
@@ -194,12 +153,11 @@ window.TimeMachine = window.TimeMachine || {};
     let dragDistance = 0;
 
     el.addEventListener('pointerdown', function (e) {
-      if (e.target.closest('a')) return; // let link clicks through undisturbed
+      if (e.target.closest('a')) return;
       isDown = true;
       dragDistance = 0;
       startPos = vertical ? e.clientY : e.clientX;
       startScroll = getScroll();
-      pause();
       el.classList.add('dragging');
       el.setPointerCapture(e.pointerId);
     });
@@ -211,20 +169,15 @@ window.TimeMachine = window.TimeMachine || {};
       setScroll(startScroll - delta);
     });
     function endDrag() {
-      if (!isDown) return;
       isDown = false;
       el.classList.remove('dragging');
-      scheduleResume(RESUME_DELAY);
     }
     el.addEventListener('pointerup', endDrag);
     el.addEventListener('pointercancel', endDrag);
 
-    rafId = requestAnimationFrame(tick);
-
     return {
       wasDragging: function () { return dragDistance > 6; },
-      resetScroll: function () { setScroll(0); lastTime = null; },
-      stop: function () { cancelAnimationFrame(rafId); }
+      resetScroll: function () { setScroll(0); }
     };
   }
 
@@ -297,11 +250,11 @@ window.TimeMachine = window.TimeMachine || {};
     });
   }
 
-  // Auto-scroll runs on the same four .card-body panels for the whole
+  // Drag-scroll runs on the same four .card-body panels for the whole
   // session — only their contents change between selections, not the
   // elements themselves — so this only needs to happen once.
   const cardBodyScrollers = Array.from(document.querySelectorAll('.card-body')).map(function (el) {
-    return initAutoScroll(el, 'vertical');
+    return initDragScroll(el, 'vertical');
   });
 
   // ---------- results page ----------
@@ -310,25 +263,44 @@ window.TimeMachine = window.TimeMachine || {};
   let currentMode = 'year';
   let currentValue = null;
 
+  const MIN_DECADE = 1940;
+  const MAX_DECADE = 2020;
+
   function updateYearNav() {
     const isYear = currentMode === 'year';
-    yearNavRow.classList.toggle('is-year', isYear);
-    navMinus10.hidden = !isYear;
+    const isDecade = currentMode === 'decade';
+
+    // ±1 only makes sense at year granularity; ±10 works for both (a
+    // decade jump of 10 lands you on the adjacent decade).
     navMinus1.hidden = !isYear;
     navPlus1.hidden = !isYear;
-    navPlus10.hidden = !isYear;
-    if (!isYear) return;
-    navMinus10.disabled = currentValue - 10 < MIN_YEAR;
-    navMinus1.disabled = currentValue - 1 < MIN_YEAR;
-    navPlus1.disabled = currentValue + 1 > MAX_YEAR;
-    navPlus10.disabled = currentValue + 10 > MAX_YEAR;
+    navMinus10.hidden = !(isYear || isDecade);
+    navPlus10.hidden = !(isYear || isDecade);
+
+    if (isYear) {
+      navMinus10.disabled = currentValue - 10 < MIN_YEAR;
+      navMinus1.disabled = currentValue - 1 < MIN_YEAR;
+      navPlus1.disabled = currentValue + 1 > MAX_YEAR;
+      navPlus10.disabled = currentValue + 10 > MAX_YEAR;
+    } else if (isDecade) {
+      navMinus10.disabled = currentValue - 10 < MIN_DECADE;
+      navPlus10.disabled = currentValue + 10 > MAX_DECADE;
+    }
   }
 
   function jumpYears(delta) {
-    if (currentMode !== 'year' || currentValue === null) return;
-    const newYear = Math.max(MIN_YEAR, Math.min(MAX_YEAR, currentValue + delta));
-    if (newYear === currentValue) return;
-    showResults('year', newYear, String(newYear));
+    if (currentValue === null) return;
+
+    if (currentMode === 'year') {
+      const newYear = Math.max(MIN_YEAR, Math.min(MAX_YEAR, currentValue + delta));
+      if (newYear !== currentValue) showResults('year', newYear, String(newYear));
+      return;
+    }
+
+    if (currentMode === 'decade' && Math.abs(delta) === 10) {
+      const newDecade = Math.max(MIN_DECADE, Math.min(MAX_DECADE, currentValue + delta));
+      if (newDecade !== currentValue) showResults('decade', newDecade, newDecade + 's');
+    }
   }
 
   navMinus10.addEventListener('click', function () { jumpYears(-10); });
@@ -436,7 +408,7 @@ window.TimeMachine = window.TimeMachine || {};
 
     const stripEl = expandedInner.querySelector('.expanded-strip');
     if (stripEl) {
-      const scroller = initAutoScroll(stripEl, 'horizontal');
+      const scroller = initDragScroll(stripEl, 'horizontal');
 
       // Clicking a sub-card (its image, meta text, or padding — anywhere
       // that isn't the title link, which already navigates on its own)
