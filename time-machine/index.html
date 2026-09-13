@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Time Machine – Historical Capsule</title>
+  <title>Time Capsule – Historical Explorer</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;600&family=Special+Elite&family=Righteous&family=Audiowide&family=Abril+Fatface&family=Monoton&family=Press+Start+2P&family=Baloo+2:wght@600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
@@ -18,14 +18,73 @@
   <!-- ===== HEADER ===== -->
   <!-- Minimal by design: just a mark and the three entry points into the timeline. -->
   <header class="site-header">
-    <div class="brand">TIME MACHINE</div>
+    <button class="brand" id="brand-home-btn" type="button" aria-label="Time Capsule — go to home">
+      <!-- Swap this file to change the logo — keep it roughly square (the
+           header displays it at 26x26px), transparent background, and
+           simple enough to read at that size. SVG or PNG both work.
+           Note: any CSS animation lives inside logo.svg itself — a plain
+           <img> reference like this can't be animated from outside file. -->
+      <img class="brand-logo" src="assets/images/logo.svg" alt="" />
+      TIME CAPSULE
+    </button>
     <nav class="mode-nav">
       <button class="mode-btn" data-mode="year" type="button">Search by Year</button>
       <span class="nav-divider">|</span>
       <button class="mode-btn" data-mode="decade" type="button">Search by Decade</button>
       <span class="nav-divider">|</span>
       <button class="mode-btn" data-mode="direct" type="button">Enter a Year</button>
+      <button class="music-toggle" id="music-toggle" type="button" aria-label="Music" aria-expanded="false" aria-controls="music-panel">
+        <svg class="music-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M9 18V5l11-2v13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.6" fill="none"/>
+          <circle cx="17" cy="16" r="3" stroke="currentColor" stroke-width="1.6" fill="none"/>
+        </svg>
+      </button>
     </nav>
+
+    <!-- Music player popover — anchored under the header, filled in and
+         driven entirely by js/music-player.js. See js/music.js to add
+         tracks; playback attempts to start on its own on page load and
+         otherwise starts on the visitor's first click/tap/keypress
+         anywhere on the page (browsers block true autoplay with sound). -->
+    <div class="music-panel" id="music-panel" hidden>
+
+      <div class="music-now-playing">
+        <div class="music-art" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 18V5l11-2v13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="2.6" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="16" r="2.6" stroke="currentColor" stroke-width="1.5"/></svg>
+        </div>
+        <div class="music-now-playing-info">
+          <p class="music-panel-eyebrow" id="music-panel-section">Home</p>
+          <h3 class="music-track-title" id="music-track-title">No track selected</h3>
+          <p class="music-track-artist" id="music-track-artist"></p>
+        </div>
+      </div>
+
+      <div class="music-progress-row">
+        <span class="music-time" id="music-time-current">0:00</span>
+        <input class="music-progress" id="music-progress" type="range" min="0" max="100" value="0" step="0.1" aria-label="Seek" />
+        <span class="music-time" id="music-time-duration">0:00</span>
+      </div>
+
+      <div class="music-transport">
+        <button class="music-ctrl-btn" id="music-prev-btn" type="button" aria-label="Previous track">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 6h2v12H6zM20 6L9 12l11 6z"/></svg>
+        </button>
+        <button class="music-play-btn" id="music-play-btn" type="button" aria-label="Play">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="music-ctrl-btn" id="music-next-btn" type="button" aria-label="Next track">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 6h2v12h-2zM4 6l11 6-11 6z"/></svg>
+        </button>
+      </div>
+
+      <div class="music-volume-row">
+        <svg class="music-volume-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 5V4L8 9H4z"/></svg>
+        <input class="music-volume" id="music-volume" type="range" min="0" max="1" step="0.01" value="0.6" aria-label="Volume" />
+      </div>
+
+      <div class="music-track-list" id="music-track-list"></div>
+    </div>
   </header>
 
   <main class="stage" id="stage">
@@ -70,23 +129,47 @@
          Feeds into the same 'timeline:enter' event the timeline itself uses,
          so it triggers the exact same TV transition + results flow. -->
     <div class="direct-view" id="direct-view" hidden>
-      <form class="direct-form" id="direct-form" novalidate>
-        <label for="direct-year-input">Enter a year</label>
-        <div class="direct-input-row">
-          <input
-            type="text"
-            id="direct-year-input"
-            placeholder="e.g. 1995"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            maxlength="4"
-            autocomplete="off"
-            required
-          />
-          <button type="submit" class="direct-submit">Enter</button>
+      <!-- Same drifting-gradient treatment as the idle state, just with its
+           own two hues, so this page doesn't read as a bare/broken screen
+           when no era theme is active yet. -->
+      <div class="direct-bg" aria-hidden="true"></div>
+
+      <div class="direct-inner">
+        <p class="direct-eyebrow">Direct Access</p>
+        <form class="direct-form" id="direct-form" novalidate>
+          <label for="direct-year-input">Enter a year</label>
+          <div class="direct-input-row">
+            <input
+              type="text"
+              id="direct-year-input"
+              placeholder="e.g. 1995"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="4"
+              autocomplete="off"
+              required
+            />
+            <button type="submit" class="direct-submit">Enter</button>
+          </div>
+          <p class="direct-hint">Any year from 1940 to 2026</p>
+          <p class="direct-error" id="direct-error" role="alert"></p>
+        </form>
+
+        <!-- Quick jumps for a handful of notable years — same 'timeline:enter'
+             event the form submit and the scrolling timeline both use, so
+             these drop straight into the existing TV-transition + results flow. -->
+        <div class="direct-quick-jump">
+          <p class="direct-quick-label">Or jump straight to</p>
+          <div class="direct-chip-row" id="direct-chip-row">
+            <button class="direct-chip" type="button" data-year="1969">1969</button>
+            <button class="direct-chip" type="button" data-year="1977">1977</button>
+            <button class="direct-chip" type="button" data-year="1985">1985</button>
+            <button class="direct-chip" type="button" data-year="1995">1995</button>
+            <button class="direct-chip" type="button" data-year="2001">2001</button>
+            <button class="direct-chip" type="button" data-year="2016">2016</button>
+          </div>
         </div>
-        <p class="direct-error" id="direct-error" role="alert"></p>
-      </form>
+      </div>
     </div>
 
     <!-- Shown instead of results when a year is correctly 4 digits but
@@ -267,10 +350,14 @@
   <script src="data/movie.js"></script>
 
   <!-- Load order: themes before timeline (timeline calls TimeMachine.getThemeClassForYear),
-       then timeline before app (app calls TimeMachine.timeline.start). border-glow.js
-       is independent of everything else and can load last. -->
+       then timeline before app (app calls TimeMachine.timeline.start). music.js is just
+       data and can load anywhere before music-player.js, which needs
+       TimeMachine.onThemeChange from themes.js. border-glow.js is
+       independent of everything else and can load last. -->
   <script src="js/api.js"></script>
   <script src="js/themes.js"></script>
+  <script src="js/music.js"></script>
+  <script src="js/music-player.js"></script>
   <script src="js/timeline.js"></script>
   <script src="js/app.js"></script>
   <script src="js/border-glow.js"></script>

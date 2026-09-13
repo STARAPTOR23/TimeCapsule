@@ -1,5 +1,5 @@
 /* ==========================================================================
-   THE TIME MACHINE — era themes
+   TIME CAPSULE — era themes
    Three things happen here per decade:
    1. body.theme-XXXX sets --era-accent (highlights/text), --era-panel
       (card/panel background tint), --era-border (card/panel border tint),
@@ -84,14 +84,24 @@ body.theme-1990s { --era-accent: #6fcf87; --era-panel: rgba(16, 22, 14, 0.55); -
 }
 
 /* ----- 2000s — Y2K / Frutiger Aero ----- */
-/* Glossy aqua-blue gradients with big soft "glass bubble" highlights. */
-body.theme-2000s { --era-accent: #4fd1c5; --era-panel: rgba(10, 36, 46, 0.55); --era-border: rgba(79, 209, 197, 0.32); --font-era-display: 'Baloo 2', sans-serif; }
+/* The real reference points (frutigeraeroarchive.org, Windows XP/Vista/Aero,
+   Web 2.0 gloss): a bright blue-sky-to-water gradient, a hint of grass-green
+   at the horizon, soft bokeh-like glass bubbles, and one bigger lens-flare
+   glow — the "technology meets idealized nature" combo the style is known for. */
+body.theme-2000s { --era-accent: #4fc3f7; --era-panel: rgba(8, 44, 58, 0.55); --era-border: rgba(79, 195, 247, 0.34); --font-era-display: 'Baloo 2', sans-serif; }
 .bg-layer.era-2000s {
   background:
-    radial-gradient(circle at 18% 25%, rgba(255, 255, 255, 0.35), transparent 30%),
-    radial-gradient(circle at 75% 20%, rgba(79, 209, 197, 0.4), transparent 45%),
-    radial-gradient(circle at 55% 80%, rgba(47, 143, 239, 0.35), transparent 50%),
-    linear-gradient(160deg, #0d3b4a, #04222c);
+    /* floating glass/bokeh bubbles */
+    radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 9%),
+    radial-gradient(circle at 30% 32%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 6%),
+    radial-gradient(circle at 68% 58%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 8%),
+    radial-gradient(circle at 82% 70%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 5%),
+    /* soft lens-flare / sun glow, upper right */
+    radial-gradient(circle at 80% 14%, rgba(255, 255, 255, 0.55), transparent 28%),
+    /* grass-green glow at the base, the "nature" half of the motif */
+    radial-gradient(circle at 50% 105%, rgba(140, 230, 150, 0.32), transparent 55%),
+    /* wide-open blue sky darkening toward the water */
+    linear-gradient(180deg, #0a6bb0 0%, #1596c4 38%, #128aa0 66%, #0a4a55 100%);
 }
 
 /* ----- 2010s — Flat Design / Social Media ----- */

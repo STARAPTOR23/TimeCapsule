@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <style>
+    @keyframes logoGlow {
+      0%, 100% { opacity: 0.65; }
+      50% { opacity: 1; }
+    }
+    @keyframes sandFall {
+      0%   { transform: translateY(-12px); opacity: 0; }
+      12%  { opacity: 1; }
+      48%  { transform: translateY(12px); opacity: 1; }
+      58%  { opacity: 0; }
+      100% { transform: translateY(12px); opacity: 0; }
+    }
+    .logo-frame { animation: logoGlow 4s ease-in-out infinite; transform-origin: 32px 32px; }
+    .logo-grain { animation: sandFall 2.6s ease-in infinite; transform-origin: 32px 32px; }
+    .logo-grain.g2 { animation-delay: 0.85s; }
+    .logo-grain.g3 { animation-delay: 1.7s; }
+    @media (prefers-reduced-motion: reduce) {
+      .logo-frame, .logo-grain { animation: none; }
+    }
+  </style>
+  <circle cx="32" cy="32" r="30" stroke="#e7c46b" stroke-width="3"/>
+  <path d="M20 16H44M20 48H44" stroke="#e7c46b" stroke-width="3" stroke-linecap="round"/>
+  <path class="logo-frame" d="M22 16C22 24 30 28 30 32C30 36 22 40 22 48"
+        stroke="#e7c46b" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="logo-frame" d="M42 16C42 24 34 28 34 32C34 36 42 40 42 48"
+        stroke="#e7c46b" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle class="logo-grain" cx="32" cy="32" r="1.5" fill="#e7c46b"/>
+  <circle class="logo-grain g2" cx="32" cy="32" r="1.2" fill="#e7c46b"/>
+  <circle class="logo-grain g3" cx="32" cy="32" r="1.5" fill="#e7c46b"/>
+  <circle cx="32" cy="32" r="2.4" fill="#e7c46b"/>
+</svg>

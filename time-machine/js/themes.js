@@ -26,14 +26,78 @@ window.TimeMachine = window.TimeMachine || {};
     return year < RANGES[0].start ? RANGES[0].cls : RANGES[RANGES.length - 1].cls;
   }
 
+  // Lets other modules (currently just the music player) react whenever the
+  // active era changes, without themes.js needing to know they exist.
+  // Subscribers are called with the theme class every time applyBodyTheme
+  // runs — including repeats, so a subscriber that only cares about actual
+  // changes should de-dupe on its own (the music player does, since
+  // switching "sections" only makes sense when the section actually changes).
+  const themeChangeSubscribers = [];
+
+  function onThemeChange(callback) {
+    themeChangeSubscribers.push(callback);
+  }
+
   function applyBodyTheme(themeClass) {
     Array.from(document.body.classList).forEach(function (cls) {
       if (cls.startsWith('theme-')) document.body.classList.remove(cls);
     });
     document.body.classList.add(themeClass);
+    themeChangeSubscribers.forEach(function (cb) { cb(themeClass); });
+  }
+
+  // A couple of eras get a looping video backdrop instead of (well, behind)
+  // the usual CSS pattern. Shared here so both the timeline crossfade and
+  // the results-page backdrop can inject the same <video> for a given era
+  // without duplicating the file paths in two places.
+  const ERA_VIDEO = {
+    'theme-1980s': 'assets/video/synth-bg.mp4',
+    'theme-1990s': 'assets/video/matrix-bg.mp4'
+  };
+
+  function getVideoForTheme(themeClass) {
+    return ERA_VIDEO[themeClass] || null;
+  }
+
+  // Builds (or clears) the looping <video> inside a given backdrop element
+  // for the given era. Reused for both the timeline's bg-layer divs and the
+  // results page's single backdrop div, so the video markup/attributes only
+  // need to be defined once.
+  function setBackdropVideo(container, themeClass) {
+    const existing = container.querySelector('.bg-video');
+    const src = getVideoForTheme(themeClass);
+
+    if (!src) {
+      if (existing) existing.remove();
+      return;
+    }
+
+    // Already showing the right video — leave it playing rather than
+    // restarting it (avoids a visible flash/reset on every re-entry).
+    if (existing && existing.dataset.src === src) return;
+    if (existing) existing.remove();
+
+    const video = document.createElement('video');
+    video.className = 'bg-video';
+    video.src = src;
+    video.dataset.src = src;
+    video.muted = true;
+    video.loop = true;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.setAttribute('aria-hidden', 'true');
+    container.insertBefore(video, container.firstChild);
+    // Autoplay can still be blocked in some contexts (e.g. very first paint
+    // before any user gesture); play() is called explicitly and its promise
+    // rejection is swallowed since a still frame of the CSS pattern behind
+    // it is a fine fallback either way.
+    video.play().catch(function () {});
   }
 
   TimeMachine.getThemeClassForYear = getThemeClassForYear;
   TimeMachine.applyBodyTheme = applyBodyTheme;
+  TimeMachine.onThemeChange = onThemeChange;
+  TimeMachine.getVideoForTheme = getVideoForTheme;
+  TimeMachine.setBackdropVideo = setBackdropVideo;
 
 })();

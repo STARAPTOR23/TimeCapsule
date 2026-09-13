@@ -1,5 +1,5 @@
 /* ==========================================================================
-   THE TIME MACHINE — responsive rules
+   TIME CAPSULE — responsive rules
    The timeline already uses clamp()/vw units so it scales reasonably on
    its own. These rules cover the parts that need real adjustment on small
    screens (drag/swipe still works via pointer events either way). A fuller
@@ -10,6 +10,16 @@
   .site-header {
     padding: 0 18px;
     height: 60px;
+  }
+
+  .music-toggle {
+    margin-left: 2px;
+  }
+
+  .music-panel {
+    right: 18px;
+    width: calc(100vw - 36px);
+    max-width: 300px;
   }
 
   .brand {

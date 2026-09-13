@@ -159,12 +159,21 @@ window.TimeMachine = window.TimeMachine || {};
   // Two stacked backdrop layers swap which one is on top, so the era
   // pattern cross-fades instead of cutting instantly.
   function crossfadeBackground(themeClass) {
+    const outgoingLayer = currentBgLayer;
     const nextLayer = currentBgLayer === bgLayerA ? bgLayerB : bgLayerA;
     nextLayer.className = 'bg-layer era-' + themeClass.replace('theme-', '');
+    TimeMachine.setBackdropVideo(nextLayer, themeClass);
     void nextLayer.offsetWidth; // force reflow so the opacity transition actually plays
     nextLayer.classList.add('active');
-    currentBgLayer.classList.remove('active');
+    outgoingLayer.classList.remove('active');
     currentBgLayer = nextLayer;
+    // The outgoing layer's video (if any) is cleared once it's fully faded
+    // out rather than immediately, so the crossfade doesn't cut it early.
+    setTimeout(function () {
+      if (!outgoingLayer.classList.contains('active')) {
+        TimeMachine.setBackdropVideo(outgoingLayer, null);
+      }
+    }, 650);
   }
 
   function goToIndex(index, animate) {
@@ -228,9 +237,36 @@ window.TimeMachine = window.TimeMachine || {};
     mode = newMode;
     items = mode === 'year' ? buildYearItems() : buildDecadeItems();
 
+    // A wheel-snap timer left over from the previous mode captures the OLD
+    // activeIndex/offset; left alone it can fire after the track has
+    // already been rebuilt for the new mode and silently recenter on a
+    // stale, wrong item.
+    clearTimeout(snapTimer);
+
+    // Pick the right default item synchronously, right here — this only
+    // needs the items array, not layout, so activeIndex is already correct
+    // before ANYTHING else (a font-load microtask, a stray wheel event,
+    // the positioning retry loop below) gets a chance to run and act on
+    // whatever activeIndex was left over from the previous mode.
+    const defaultValue = mode === 'year' ? 2026 : 2020;
+    const defaultIndex = items.findIndex(function (i) { return i.value === defaultValue; });
+    activeIndex = defaultIndex >= 0 ? defaultIndex : 0;
+
     track.className = 'timeline-track mode-' + mode;
     track.dataset.needsInit = 'true';
     render();
+
+    // Theme, background video, and the enter button are driven off
+    // activeIndex + items, both already correct above — set them now,
+    // deterministically, rather than only ever waiting on some later
+    // updateVisualState() pass to notice and update them. This is what
+    // actually prevents them getting stuck on a stale value: even if a
+    // leftover async callback (see fonts.ready below) still manages to
+    // fire on a wrong index before layout is ready, it can no longer mask
+    // a legitimate correction, because there's no unfired correction left
+    // to mask — this call already made it.
+    onActiveChange();
+    delete track.dataset.needsInit;
 
     arrowLeft.onclick = function () { goToIndex(activeIndex - 1, true); };
     arrowRight.onclick = function () { goToIndex(activeIndex + 1, true); };
@@ -255,12 +291,6 @@ window.TimeMachine = window.TimeMachine || {};
       }
 
       measureSpacing();
-
-      // Default to today's decade/year so the timeline opens somewhere relevant.
-      const defaultValue = mode === 'year' ? 2026 : 2020;
-      const defaultIndex = items.findIndex(function (i) { return i.value === defaultValue; });
-      activeIndex = defaultIndex >= 0 ? defaultIndex : 0;
-
       goToIndex(activeIndex, false);
     }
 

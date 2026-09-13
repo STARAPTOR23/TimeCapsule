@@ -54,7 +54,7 @@ window.TimeMachine = window.TimeMachine || {};
     'theme-1970s': { label: '1970s — Vintage', description: 'Warm tones, bell-bottoms, and vinyl records — a decade that ran on analog.' },
     'theme-1980s': { label: '1980s — Neon / Synthwave', description: 'Neon grids, synth-pop, and a skyline lit up like an arcade cabinet.' },
     'theme-1990s': { label: '1990s — VHS / Grunge', description: 'Tracking lines, dial-up modems, and the gritty energy of early alt culture.' },
-    'theme-2000s': { label: '2000s — Y2K / Frutiger Aero', description: 'Glossy bubbles, aqua gradients, and the shiny optimism of the early web.' },
+    'theme-2000s': { label: '2000s — Y2K / Frutiger Aero', description: 'Blue skies, glass bubbles, and a glossy vision of technology meeting nature.' },
     'theme-2010s': { label: '2010s — Flat Design / Social Media', description: 'Flat colors, endless feeds, and interfaces built for the smartphone.' },
     'theme-2020s': { label: '2020s — Minimalism', description: 'Quiet interfaces, muted tones, and design that gets out of the way.' }
   };
@@ -322,6 +322,13 @@ window.TimeMachine = window.TimeMachine || {};
     currentValue = value;
 
     resultsBackdrop.className = 'results-backdrop era-' + themeClass.replace('theme-', '');
+    TimeMachine.setBackdropVideo(resultsBackdrop, themeClass);
+    // Also (re)applies body.theme-XXXX — the timeline already does this as
+    // you scroll it, but entries that skip the timeline (typing a year
+    // directly, or a quick-jump chip) otherwise never set it, leaving the
+    // results page's --era-accent-driven colors stuck on whatever the body
+    // last happened to have.
+    TimeMachine.applyBodyTheme(themeClass);
     resultsEyebrow.textContent = era.label;
     resultsTitle.textContent = mode === 'year' ? 'WELCOME TO ' + value : 'EXPLORING THE ' + label.toUpperCase();
     resultsDescription.textContent = era.description;
@@ -487,6 +494,7 @@ window.TimeMachine = window.TimeMachine || {};
       directError.textContent = '';
       directInput.value = '';
       directInput.focus();
+      if (TimeMachine.MusicPlayer) TimeMachine.MusicPlayer.setSection('home');
     } else {
       directView.hidden = true;
       timelineView.hidden = false;
@@ -499,6 +507,30 @@ window.TimeMachine = window.TimeMachine || {};
       selectMode(btn.dataset.mode, btn);
     });
   });
+
+  // ---------- brand / logo → back to the idle home screen ----------
+
+  const brandHomeBtn = document.getElementById('brand-home-btn');
+
+  function goToIdle() {
+    modeButtons.forEach(function (btn) { btn.classList.remove('active'); });
+
+    timelineView.hidden = true;
+    directView.hidden = true;
+    resultsView.hidden = true;
+    specialErrorScreen.hidden = true;
+    tvTransition.hidden = true;
+    tvTransition.classList.remove('playing');
+    if (!expandedOverlay.hidden) closeExpandedCard();
+
+    idleState.hidden = false;
+
+    if (TimeMachine.MusicPlayer) TimeMachine.MusicPlayer.setSection('home');
+  }
+
+  if (brandHomeBtn) {
+    brandHomeBtn.addEventListener('click', goToIdle);
+  }
 
   // ---------- direct year entry ----------
 
@@ -552,6 +584,20 @@ window.TimeMachine = window.TimeMachine || {};
     }));
   });
 
+  // ---------- quick-jump chips on the direct-entry page ----------
+
+  const directChipRow = document.getElementById('direct-chip-row');
+  if (directChipRow) {
+    directChipRow.addEventListener('click', function (e) {
+      const chip = e.target.closest('.direct-chip');
+      if (!chip) return;
+      const year = Number(chip.dataset.year);
+      document.dispatchEvent(new CustomEvent('timeline:enter', {
+        detail: { mode: 'year', value: year, label: String(year) }
+      }));
+    });
+  }
+
   // ---------- entering from the timeline (year or decade) ----------
 
   document.addEventListener('timeline:enter', function (e) {
@@ -562,6 +608,7 @@ window.TimeMachine = window.TimeMachine || {};
     resultsView.hidden = true;
     if (lastMode === 'direct') {
       directView.hidden = false;
+      if (TimeMachine.MusicPlayer) TimeMachine.MusicPlayer.setSection('home');
     } else {
       timelineView.hidden = false;
     }
