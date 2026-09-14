@@ -1,0 +1,122 @@
+/* ==========================================================================
+   TIME CAPSULE — responsive rules
+   The timeline already uses clamp()/vw units so it scales reasonably on
+   its own. These rules cover the parts that need real adjustment on small
+   screens (drag/swipe still works via pointer events either way). A fuller
+   pass happens once the results page exists and there's more to fit.
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  .site-header {
+    padding: 0 18px;
+    height: 60px;
+  }
+
+  .music-toggle {
+    margin-left: 2px;
+  }
+
+  .music-panel {
+    right: 18px;
+    width: calc(100vw - 36px);
+    max-width: 300px;
+  }
+
+  .brand {
+    font-size: 0.7rem;
+  }
+
+  .mode-nav {
+    gap: 14px;
+  }
+
+  .mode-btn {
+    font-size: 0.85rem;
+  }
+
+  .stage {
+    top: 60px;
+  }
+
+  .timeline-track.mode-year {
+    gap: 36px;
+  }
+
+  .timeline-track.mode-decade {
+    gap: 60px;
+  }
+
+  .scroll-arrow {
+    width: 38px;
+    height: 38px;
+    font-size: 1.2rem;
+  }
+
+  .scroll-arrow.left {
+    left: 10px;
+  }
+
+  .scroll-arrow.right {
+    right: 10px;
+  }
+
+  .timeline-ruler {
+    bottom: 100px;
+  }
+
+  .enter-panel {
+    bottom: 30px;
+  }
+
+  .results-grid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: minmax(280px, 46vh);
+  }
+
+  .results-inner {
+    padding: 90px 18px 40px;
+  }
+
+  .card-expanded-close {
+    top: 14px;
+    right: 14px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .card-expanded-image {
+    height: 16vh;
+    min-height: 100px;
+  }
+
+  .card-expanded-header {
+    padding: 18px 20px 12px;
+  }
+
+  .expanded-strip-track {
+    padding: 0 20px 20px;
+    gap: 12px;
+  }
+
+  .expanded-subcard {
+    flex-basis: 220px;
+  }
+
+  .direct-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #direct-year-input {
+    width: 100%;
+  }
+
+  .year-nav-row {
+    gap: 8px;
+  }
+
+  .year-nav-btn {
+    font-size: 0.7rem;
+    padding: 8px 10px;
+  }
+}
